@@ -39,6 +39,7 @@ dependencies:
   firebase_ui_auth: ^1.16.1
   cloud_firestore: ^5.6.5
   intl: ^0.19.0
+  flash_card: ^0.1.0
 
 dev_dependencies:
   flutter_test:

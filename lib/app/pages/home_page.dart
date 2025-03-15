@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'subject_page.dart';
+import 'flashcards.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,6 +27,7 @@ class _HomePageState extends State<HomePage> {
         controller: _pageController,
         children: <Widget>[
           SubjectPage(),
+          FlashcardPage(subjectId: 'UfYr3l0YXKJ8EuJRD4gr'),
         ],
         onPageChanged: (int page) {
           setState(() {
@@ -43,7 +45,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.access_alarm), // Example icon for the second tab
-            label: 'Test Tab', // Example label
+            label: 'Flashcard', // Example label
           ),
         ],
       ),

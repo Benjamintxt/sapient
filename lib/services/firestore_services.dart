@@ -114,4 +114,55 @@ class FirestoreService {
       throw Exception("Error deleting subject: $e");
     }
   }
+
+  Future<void> addFlashcard(String subjectId, String front, String back) async {
+    try {
+      String? userId = getCurrentUserUid();
+      if (userId == null) {
+        throw Exception("User not authenticated.");
+      }
+
+      await _db
+          .collection('users')
+          .doc(userId)
+          .collection('subjects')
+          .doc(subjectId)
+          .collection('flashcards')
+          .doc()
+          .set({
+        'front': front,
+        'back': back,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception("Error adding flashcard: $e");
+    }
+  }
+
+  // Get flashcards for a subject
+  Stream<QuerySnapshot> getFlashcards(String subjectId) {
+    String? userId = getCurrentUserUid();
+    if (userId == null) throw Exception("User not authenticated.");
+
+    return _db
+        .collection('users')
+        .doc(userId)
+        .collection('subjects')
+        .doc(subjectId)
+        .collection('flashcards')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+  }
+
+  //Delete a Flashcard
+  Future<void> deleteFlashcard(String subjectId, String flashcardId) async{
+    try{
+      String? userId = getCurrentUserUid();
+      if (userId == null) throw Exception("User not authenticated.");
+
+      await _db.collection('users').doc(userId).collection('subjects').doc(subjectId).collection('flashcards').doc(flashcardId).delete();
+    } catch (e){
+      throw Exception("Error deleting flashcard: $e");
+    }
+  }
 }
