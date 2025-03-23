@@ -8,142 +8,107 @@ class FirestoreService {
   static String? getCurrentUserUid() {
     try {
       FirebaseAuth auth = FirebaseAuth.instance;
-
-      // Récupérer l'utilisateur actuellement connecté
       User? user = auth.currentUser;
-
-      if (user != null) {
-        // Récupérer l'UID de l'utilisateur
-        return user.uid;
-      } else {
-        // Aucun utilisateur n'est actuellement connecté
-        return null;
-      }
+      return user?.uid;
     } catch (e) {
-      // Handle the error as needed
       return null;
     }
   }
 
-  // Create a subject under the authenticated user
+  // Create a subject
   Future<String> createSubject(String name, {String? parentId}) async {
-    try {
-      String? userId = getCurrentUserUid();
-      if (userId == null) {
-        throw Exception("User not authenticated.");
-      }
+    String? userId = getCurrentUserUid();
+    if (userId == null) throw Exception("User not authenticated.");
 
-      DocumentReference newSubjectRef =
-      _db.collection('users').doc(userId).collection('subjects').doc();
-      String subjectId = newSubjectRef.id;
+    DocumentReference newSubjectRef =
+    _db.collection('users').doc(userId).collection('subjects').doc();
+    String subjectId = newSubjectRef.id;
 
-      // Get current date and format it
-      String formattedDate = DateFormat('dd.MM.yyyy').format(DateTime.now());
+    String formattedDate = DateFormat('dd.MM.yyyy').format(DateTime.now());
 
-      await newSubjectRef.set({
-        'name': name,
-        'parentId': parentId,
-        'children': [],
-        'createdAt': formattedDate, // Store formatted date
-        'timestamp': FieldValue.serverTimestamp(),
+    await newSubjectRef.set({
+      'name': name,
+      'parentId': parentId,
+      'children': [],
+      'createdAt': formattedDate,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    if (parentId != null) {
+      DocumentReference parentRef =
+      _db.collection('users').doc(userId).collection('subjects').doc(parentId);
+      await parentRef.update({
+        'children': FieldValue.arrayUnion([subjectId])
       });
-
-      if (parentId != null) {
-        DocumentReference parentRef =
-        _db.collection('users').doc(userId).collection('subjects').doc(parentId);
-        await parentRef.update({
-          'children': FieldValue.arrayUnion([subjectId])
-        });
-      }
-
-      return subjectId;
-    } catch (e) {
-      throw Exception("Error creating subject: $e");
     }
+
+    return subjectId;
   }
 
   // Get subjects for the logged-in user
   Stream<QuerySnapshot> getSubjects() {
-  String? userId = getCurrentUserUid();
-  if (userId == null) throw Exception("User not authenticated.");
-
-  return _db.collection('users').doc(userId).collection('subjects').orderBy('createdAt', descending: false).snapshots();
-  }
-
-
-
-  Future<void> deleteSubject(String subjectId) async {
-    try {
-      String? userId = getCurrentUserUid();
-      if (userId == null) {
-        throw Exception("User not authenticated.");
-      }
-
-      DocumentReference subjectRef =
-      _db.collection('users').doc(userId).collection('subjects').doc(subjectId);
-      DocumentSnapshot subjectSnapshot = await subjectRef.get();
-
-      if (!subjectSnapshot.exists) {
-        throw Exception("Subject not found.");
-      }
-
-      Map<String, dynamic>? subjectData = subjectSnapshot.data() as Map<String, dynamic>?;
-
-      if (subjectData != null) {
-        List<dynamic> children = subjectData['children'] ?? [];
-
-        // Recursively delete all children
-        for (String childId in children) {
-          await deleteSubject(childId);
-        }
-
-        // Remove from parent's children list
-        String? parentId = subjectData['parentId'];
-        if (parentId != null) {
-          DocumentReference parentRef =
-          _db.collection('users').doc(userId).collection('subjects').doc(parentId);
-          await parentRef.update({
-            'children': FieldValue.arrayRemove([subjectId])
-          });
-        }
-
-        // Delete the subject itself
-        await subjectRef.delete();
-      }
-    } catch (e) {
-      throw Exception("Error deleting subject: $e");
-    }
-  }
-
-  Future<void> addFlashcard(String subjectId, String front, String back) async {
-    try {
-      String? userId = getCurrentUserUid();
-      if (userId == null) {
-        throw Exception("User not authenticated.");
-      }
-
-      await _db
-          .collection('users')
-          .doc(userId)
-          .collection('subjects')
-          .doc(subjectId)
-          .collection('flashcards')
-          .doc()
-          .set({
-        'front': front,
-        'back': back,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw Exception("Error adding flashcard: $e");
-    }
-  }
-
-  // Get flashcards for a subject
-  Stream<QuerySnapshot> getFlashcards(String subjectId) {
     String? userId = getCurrentUserUid();
     if (userId == null) throw Exception("User not authenticated.");
 
+    return _db
+        .collection('users')
+        .doc(userId)
+        .collection('subjects')
+        .orderBy('createdAt', descending: false)
+        .snapshots();
+  }
+
+  Future<void> deleteSubject(String subjectId) async {
+    String? userId = getCurrentUserUid();
+    if (userId == null) throw Exception("User not authenticated.");
+
+    DocumentReference subjectRef =
+    _db.collection('users').doc(userId).collection('subjects').doc(subjectId);
+    DocumentSnapshot subjectSnapshot = await subjectRef.get();
+
+    if (!subjectSnapshot.exists) throw Exception("Subject not found.");
+
+    Map<String, dynamic>? subjectData =
+    subjectSnapshot.data() as Map<String, dynamic>?;
+
+    if (subjectData != null) {
+      List<dynamic> children = subjectData['children'] ?? [];
+
+      for (String childId in children) {
+        await deleteSubject(childId);
+      }
+
+      String? parentId = subjectData['parentId'];
+      if (parentId != null) {
+        DocumentReference parentRef =
+        _db.collection('users').doc(userId).collection('subjects').doc(parentId);
+        await parentRef.update({
+          'children': FieldValue.arrayRemove([subjectId])
+        });
+      }
+
+      await subjectRef.delete();
+    }
+  }
+
+  // 🔄 Ajout cohérent avec userId passé en paramètre
+  Future<void> addFlashcard(String userId, String subjectId, String front, String back) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('subjects')
+        .doc(subjectId)
+        .collection('flashcards')
+        .doc()
+        .set({
+      'front': front,
+      'back': back,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // 🔄 Récupération des flashcards
+  Stream<QuerySnapshot> getFlashcards(String userId, String subjectId) {
     return _db
         .collection('users')
         .doc(userId)
@@ -154,15 +119,15 @@ class FirestoreService {
         .snapshots();
   }
 
-  //Delete a Flashcard
-  Future<void> deleteFlashcard(String subjectId, String flashcardId) async{
-    try{
-      String? userId = getCurrentUserUid();
-      if (userId == null) throw Exception("User not authenticated.");
-
-      await _db.collection('users').doc(userId).collection('subjects').doc(subjectId).collection('flashcards').doc(flashcardId).delete();
-    } catch (e){
-      throw Exception("Error deleting flashcard: $e");
-    }
+  // 🔄 Suppression cohérente avec userId
+  Future<void> deleteFlashcard(String userId, String subjectId, String flashcardId) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('subjects')
+        .doc(subjectId)
+        .collection('flashcards')
+        .doc(flashcardId)
+        .delete();
   }
 }
