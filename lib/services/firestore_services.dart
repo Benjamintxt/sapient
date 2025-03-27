@@ -130,4 +130,22 @@ class FirestoreService {
         .doc(flashcardId)
         .delete();
   }
+
+// 🔄 Mise à jour d'une flashcard
+  Future<void> updateFlashcard(String userId, String subjectId, String flashcardId, String newFront, String newBack) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('subjects')
+        .doc(subjectId)
+        .collection('flashcards')
+        .doc(flashcardId)
+        .update({
+      'front': newFront,
+      'back': newBack,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
+
+
 }
