@@ -4,8 +4,16 @@ import 'package:sapient/services/firestore_services.dart';
 class AddFlashcardPage extends StatefulWidget {
   final String subjectId;
   final String userId;
+  final int level;
+  final List<String>? parentPathIds;
 
-  const AddFlashcardPage({super.key, required this.subjectId, required this.userId});
+  const AddFlashcardPage({
+    super.key,
+    required this.subjectId,
+    required this.userId,
+    required this.level,
+    required this.parentPathIds,
+  });
 
   @override
   State<AddFlashcardPage> createState() => _AddFlashcardPageState();
@@ -48,7 +56,14 @@ class _AddFlashcardPageState extends State<AddFlashcardPage> {
                 final front = questionController.text.trim();
                 final back = answerController.text.trim();
                 if (front.isNotEmpty && back.isNotEmpty) {
-                  await FirestoreService().addFlashcard(widget.userId, widget.subjectId, front, back);
+                  await FirestoreService().addFlashcardAtPath(
+                    userId: widget.userId,
+                    subjectId: widget.subjectId,
+                    front: front,
+                    back: back,
+                    level: widget.level,
+                    parentPathIds: widget.parentPathIds,
+                  );
                   Navigator.pop(context);
                 }
               },
@@ -61,10 +76,6 @@ class _AddFlashcardPageState extends State<AddFlashcardPage> {
           ],
         ),
       ),
-
-
-
-
     );
   }
 }

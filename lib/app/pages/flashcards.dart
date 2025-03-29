@@ -8,11 +8,15 @@ import 'flashcard_view_page.dart';
 class FlashcardPage extends StatefulWidget {
   final String subjectId;
   final String userId;
+  final int level;
+  final List<String>? parentPathIds;
 
   const FlashcardPage({
     super.key,
     required this.subjectId,
     required this.userId,
+    required this.level,
+    required this.parentPathIds,
   });
 
   @override
@@ -50,9 +54,11 @@ class _FlashcardPageState extends State<FlashcardPage> {
         children: [
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firestoreService.getFlashcards(
-                widget.userId,
-                widget.subjectId,
+              stream: _firestoreService.getFlashcardsAtPath(
+                userId: widget.userId,
+                subjectId: widget.subjectId,
+                level: widget.level,
+                parentPathIds: widget.parentPathIds,
               ),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -89,6 +95,8 @@ class _FlashcardPageState extends State<FlashcardPage> {
                                   flashcardId: doc.id,
                                   subjectId: widget.subjectId,
                                   userId: widget.userId,
+                                  level: widget.level,
+                                  parentPathIds: widget.parentPathIds,
                                 ),
                               ),
                             );
@@ -102,22 +110,14 @@ class _FlashcardPageState extends State<FlashcardPage> {
                         ),
                       );
                     },
-                    separatorBuilder: (context, index) =>
-                    const Divider(height: 1, color: Colors.grey),
+                    separatorBuilder: (context, index) => const Divider(height: 1, color: Colors.grey),
                   ),
                 );
               },
             ),
-
-
-
-
-
           ),
-
           const Divider(height: 1, color: Colors.grey),
           const SizedBox(height: 8),
-
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: Row(
@@ -132,6 +132,8 @@ class _FlashcardPageState extends State<FlashcardPage> {
                         builder: (context) => AddFlashcardPage(
                           subjectId: widget.subjectId,
                           userId: widget.userId,
+                          level: widget.level,
+                          parentPathIds: widget.parentPathIds,
                         ),
                       ),
                     );
@@ -149,6 +151,8 @@ class _FlashcardPageState extends State<FlashcardPage> {
                         builder: (context) => FlashcardReviewPage(
                           subjectId: widget.subjectId,
                           userId: widget.userId,
+                          level: widget.level,
+                          parentPathIds: widget.parentPathIds,
                         ),
                       ),
                     );
@@ -179,7 +183,13 @@ class _FlashcardPageState extends State<FlashcardPage> {
           ElevatedButton(
             child: const Text("Supprimer"),
             onPressed: () async {
-              await _firestoreService.deleteFlashcard(widget.userId, widget.subjectId, flashcardId);
+              await _firestoreService.deleteFlashcardAtPath(
+                userId: widget.userId,
+                subjectId: widget.subjectId,
+                level: widget.level,
+                parentPathIds: widget.parentPathIds,
+                flashcardId: flashcardId,
+              );
               Navigator.of(context).pop();
             },
           ),

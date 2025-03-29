@@ -4,11 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FlashcardReviewPage extends StatefulWidget {
   final String subjectId;
   final String userId;
+  final int level;
+  final List<String>? parentPathIds;
 
   const FlashcardReviewPage({
     super.key,
     required this.subjectId,
     required this.userId,
+    required this.level,
+    required this.parentPathIds,
   });
 
   @override
@@ -27,11 +31,22 @@ class _FlashcardReviewPageState extends State<FlashcardReviewPage> {
   }
 
   Future<void> _loadFlashcards() async {
-    final snapshot = await FirebaseFirestore.instance
+    DocumentReference currentRef = FirebaseFirestore.instance
         .collection('users')
         .doc(widget.userId)
         .collection('subjects')
-        .doc(widget.subjectId)
+        .doc(widget.parentPathIds![0]);
+
+    for (int i = 1; i < widget.level; i++) {
+      currentRef = currentRef
+          .collection('subsubject$i')
+          .doc(widget.parentPathIds![i]);
+    }
+
+    final docRef =
+    currentRef.collection('subsubject${widget.level}').doc(widget.subjectId);
+
+    final snapshot = await docRef
         .collection('flashcards')
         .orderBy('timestamp', descending: false)
         .get();

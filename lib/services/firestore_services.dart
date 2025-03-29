@@ -7,127 +7,242 @@ class FirestoreService {
 
   static String? getCurrentUserUid() {
     try {
-      FirebaseAuth auth = FirebaseAuth.instance;
-      User? user = auth.currentUser;
-      return user?.uid;
+      return FirebaseAuth.instance.currentUser?.uid;
     } catch (e) {
       return null;
     }
   }
 
-  // Create a subject
-  Future<String> createSubject(String name, {String? parentId}) async {
+  /// 🔸 Crée un sujet à un niveau donné dans la bonne sous-collection
+  Future<void> createSubject({
+    required String name,
+    required int level,
+    required bool isCategory,
+    List<String>? parentPathIds,
+  }) async {
     String? userId = getCurrentUserUid();
     if (userId == null) throw Exception("User not authenticated.");
-
-    DocumentReference newSubjectRef =
-    _db.collection('users').doc(userId).collection('subjects').doc();
-    String subjectId = newSubjectRef.id;
 
     String formattedDate = DateFormat('dd.MM.yyyy').format(DateTime.now());
 
-    await newSubjectRef.set({
+    CollectionReference collectionRef;
+
+    if (level == 0) {
+      collectionRef = _db.collection('users').doc(userId).collection('subjects');
+    } else {
+      if (parentPathIds == null || parentPathIds.length != level) {
+        throw Exception("Invalid parentPathIds for level $level");
+      }
+
+      DocumentReference currentRef =
+      _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
+
+      for (int i = 1; i < level; i++) {
+        currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
+      }
+
+      collectionRef = currentRef.collection('subsubject$level');
+    }
+
+    final newDoc = collectionRef.doc();
+    await newDoc.set({
       'name': name,
-      'parentId': parentId,
-      'children': [],
+      'isCategory': isCategory,
       'createdAt': formattedDate,
       'timestamp': FieldValue.serverTimestamp(),
     });
-
-    if (parentId != null) {
-      DocumentReference parentRef =
-      _db.collection('users').doc(userId).collection('subjects').doc(parentId);
-      await parentRef.update({
-        'children': FieldValue.arrayUnion([subjectId])
-      });
-    }
-
-    return subjectId;
   }
 
-  // Get subjects for the logged-in user
-  Stream<QuerySnapshot> getSubjects() {
+  /// 🔸 Récupère les sujets au bon niveau et parent
+  Stream<QuerySnapshot> getSubjectsAtLevel(int level, List<String>? parentPathIds) {
     String? userId = getCurrentUserUid();
     if (userId == null) throw Exception("User not authenticated.");
 
-    return _db
-        .collection('users')
-        .doc(userId)
-        .collection('subjects')
-        .orderBy('createdAt', descending: false)
-        .snapshots();
+    CollectionReference ref;
+
+    if (level == 0) {
+      ref = _db.collection('users').doc(userId).collection('subjects');
+    } else {
+      if (parentPathIds == null || parentPathIds.length != level) {
+        throw Exception("Invalid parentPathIds for level $level");
+      }
+
+      DocumentReference currentRef =
+      _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
+
+      for (int i = 1; i < level; i++) {
+        currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
+      }
+
+      ref = currentRef.collection('subsubject$level');
+    }
+
+    return ref.orderBy('createdAt', descending: false).snapshots();
   }
 
-  Future<void> deleteSubject(String subjectId) async {
+  /// 🔸 Supprime récursivement un sujet et ses enfants à tous les niveaux
+  Future<void> deleteSubject({
+    required String subjectId,
+    required int level,
+    required List<String>? parentPathIds,
+  }) async {
     String? userId = getCurrentUserUid();
     if (userId == null) throw Exception("User not authenticated.");
 
-    DocumentReference subjectRef =
-    _db.collection('users').doc(userId).collection('subjects').doc(subjectId);
-    DocumentSnapshot subjectSnapshot = await subjectRef.get();
+    DocumentReference docRef;
 
-    if (!subjectSnapshot.exists) throw Exception("Subject not found.");
-
-    Map<String, dynamic>? subjectData =
-    subjectSnapshot.data() as Map<String, dynamic>?;
-
-    if (subjectData != null) {
-      List<dynamic> children = subjectData['children'] ?? [];
-
-      for (String childId in children) {
-        await deleteSubject(childId);
+    if (level == 0) {
+      docRef = _db.collection('users').doc(userId).collection('subjects').doc(subjectId);
+    } else {
+      if (parentPathIds == null || parentPathIds.length != level) {
+        throw Exception("Invalid parentPathIds for level $level");
       }
 
-      String? parentId = subjectData['parentId'];
-      if (parentId != null) {
-        DocumentReference parentRef =
-        _db.collection('users').doc(userId).collection('subjects').doc(parentId);
-        await parentRef.update({
-          'children': FieldValue.arrayRemove([subjectId])
-        });
+      DocumentReference currentRef =
+      _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
+
+      for (int i = 1; i < level; i++) {
+        currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
       }
 
-      await subjectRef.delete();
+      docRef = currentRef.collection('subsubject$level').doc(subjectId);
     }
+
+    final docSnapshot = await docRef.get();
+    if (!docSnapshot.exists) return;
+
+    final data = docSnapshot.data() as Map<String, dynamic>;
+    final bool isCategory = data['isCategory'] ?? false;
+
+    if (isCategory) {
+      for (int nextLevel = level + 1; nextLevel <= 5; nextLevel++) {
+        final nextSub = 'subsubject$nextLevel';
+        final childrenRef = docRef.collection(nextSub);
+        final childrenSnapshot = await childrenRef.get();
+
+        for (var child in childrenSnapshot.docs) {
+          await deleteSubject(
+            subjectId: child.id,
+            level: nextLevel,
+            parentPathIds: [...?parentPathIds, subjectId],
+          );
+        }
+      }
+    } else {
+      final flashcardsRef = docRef.collection('flashcards');
+      final flashcards = await flashcardsRef.get();
+      for (var card in flashcards.docs) {
+        await card.reference.delete();
+      }
+    }
+
+    await docRef.delete();
   }
 
-  // 🔄 Ajout cohérent avec userId passé en paramètre
-  Future<void> addFlashcard(String userId, String subjectId, String front, String back) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('subjects')
-        .doc(subjectId)
-        .collection('flashcards')
-        .doc()
-        .set({
+  /// 🔸 Ajouter une flashcard dans l’arborescence hiérarchique
+  Future<void> addFlashcardAtPath({
+    required String userId,
+    required String subjectId,
+    required String front,
+    required String back,
+    required int level,
+    required List<String>? parentPathIds,
+  }) async {
+    if (parentPathIds == null || parentPathIds.length != level) {
+      throw Exception("Invalid parentPathIds for level $level");
+    }
+
+    DocumentReference currentRef =
+    _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
+
+    for (int i = 1; i < level; i++) {
+      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
+    }
+
+    final docRef = currentRef.collection('subsubject$level').doc(subjectId);
+
+    await docRef.collection('flashcards').add({
       'front': front,
       'back': back,
       'timestamp': FieldValue.serverTimestamp(),
     });
   }
 
-  // 🔄 Récupération des flashcards
-  Stream<QuerySnapshot> getFlashcards(String userId, String subjectId) {
-    return _db
-        .collection('users')
-        .doc(userId)
-        .collection('subjects')
-        .doc(subjectId)
-        .collection('flashcards')
-        .orderBy('timestamp', descending: true)
-        .snapshots();
+  /// 🔸 Lire les flashcards dans l’arborescence hiérarchique
+  Stream<QuerySnapshot> getFlashcardsAtPath({
+    required String userId,
+    required String subjectId,
+    required int level,
+    required List<String>? parentPathIds,
+  }) {
+    if (parentPathIds == null || parentPathIds.length != level) {
+      throw Exception("Invalid parentPathIds for level $level");
+    }
+
+    DocumentReference currentRef =
+    _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
+
+    for (int i = 1; i < level; i++) {
+      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
+    }
+
+    final docRef = currentRef.collection('subsubject$level').doc(subjectId);
+
+    return docRef.collection('flashcards').orderBy('timestamp', descending: true).snapshots();
   }
 
-  // 🔄 Suppression cohérente avec userId
-  Future<void> deleteFlashcard(String userId, String subjectId, String flashcardId) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('subjects')
-        .doc(subjectId)
-        .collection('flashcards')
-        .doc(flashcardId)
-        .delete();
+
+  /// 🔸 Editer une flashcard
+  Future<void> updateFlashcardAtPath({
+    required String userId,
+    required String subjectId,
+    required String flashcardId,
+    required String newFront,
+    required String newBack,
+    required int level,
+    required List<String>? parentPathIds,
+  }) async {
+    if (parentPathIds == null || parentPathIds.length != level) {
+      throw Exception("Invalid parentPathIds for level $level");
+    }
+
+    DocumentReference currentRef =
+    _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
+
+    for (int i = 1; i < level; i++) {
+      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
+    }
+
+    final docRef = currentRef.collection('subsubject$level').doc(subjectId);
+
+    await docRef.collection('flashcards').doc(flashcardId).update({
+      'front': newFront,
+      'back': newBack,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// 🔸 Supprimer une flashcard dans l’arborescence hiérarchique
+  Future<void> deleteFlashcardAtPath({
+    required String userId,
+    required String subjectId,
+    required int level,
+    required List<String>? parentPathIds,
+    required String flashcardId,
+  }) async {
+    if (parentPathIds == null || parentPathIds.length != level) {
+      throw Exception("Invalid parentPathIds for level $level");
+    }
+
+    DocumentReference currentRef =
+    _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
+
+    for (int i = 1; i < level; i++) {
+      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
+    }
+
+    final docRef = currentRef.collection('subsubject$level').doc(subjectId);
+
+    await docRef.collection('flashcards').doc(flashcardId).delete();
   }
 }

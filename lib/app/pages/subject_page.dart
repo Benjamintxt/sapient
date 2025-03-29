@@ -4,7 +4,16 @@ import 'package:sapient/services/firestore_services.dart';
 import 'package:sapient/app/pages/flashcards.dart';
 
 class SubjectPage extends StatefulWidget {
-  const SubjectPage({super.key});
+  final List<String>? parentPathIds;
+  final int level;
+  final String? title;
+
+  const SubjectPage({
+    super.key,
+    this.parentPathIds,
+    this.level = 0,
+    this.title,
+  });
 
   @override
   State<SubjectPage> createState() => _SubjectPageState();
@@ -12,18 +21,21 @@ class SubjectPage extends StatefulWidget {
 
 class _SubjectPageState extends State<SubjectPage> {
   final ScrollController _scrollController = ScrollController();
+
+  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFCF7FF),
       appBar: AppBar(
-        title: const Text(
-          "Sujets",
-          style: TextStyle(
+        title: Text(
+          widget.title ?? "Sujets",
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
             fontSize: 22,
@@ -32,18 +44,20 @@ class _SubjectPageState extends State<SubjectPage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1,
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: widget.level > 0,
       ),
-
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 90), // Espace pour le bouton en bas
+            padding: const EdgeInsets.only(bottom: 90),
             child: Column(
               children: [
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
-                    stream: FirestoreService().getSubjects(),
+                    stream: FirestoreService().getSubjectsAtLevel(
+                      widget.level,
+                      widget.parentPathIds,
+                    ),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -73,10 +87,11 @@ class _SubjectPageState extends State<SubjectPage> {
                             var subject = subjects[index];
                             String subjectId = subject.id;
                             String subjectName = subject['name'];
+                            bool isCategory = subject['isCategory'] ?? false;
 
                             return GestureDetector(
                               onLongPress: () {
-                                _showDeleteDialog(context, subjectId, subjectName);
+                                _showDeleteDialog(context, subjectId);
                               },
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -87,11 +102,31 @@ class _SubjectPageState extends State<SubjectPage> {
                                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                                 onTap: () {
                                   final userId = FirestoreService.getCurrentUserUid();
-                                  if (userId != null) {
+                                  if (userId == null) return;
+
+                                  final updatedPath = [...?widget.parentPathIds, subjectId];
+
+                                  if (isCategory && widget.level < 5) {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => FlashcardPage(subjectId: subjectId, userId: userId),
+                                        builder: (_) => SubjectPage(
+                                          parentPathIds: updatedPath,
+                                          level: widget.level + 1,
+                                          title: subjectName,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => FlashcardPage(
+                                          subjectId: subjectId,
+                                          userId: userId,
+                                          level: widget.level,
+                                          parentPathIds: widget.parentPathIds,
+                                        ),
                                       ),
                                     );
                                   }
@@ -109,20 +144,15 @@ class _SubjectPageState extends State<SubjectPage> {
               ],
             ),
           ),
-
-          // 🔹 Le trait gris au-dessus du bouton
           const Positioned(
             bottom: 80,
             left: 0,
             right: 0,
             child: Divider(height: 1, color: Colors.grey),
           ),
-
-
-          // Bouton flottant positionné en bas
           Positioned(
             bottom: 20,
-            right: MediaQuery.of(context).size.width / 2 - 28, // Centré
+            right: MediaQuery.of(context).size.width / 2 - 28,
             child: FloatingActionButton(
               backgroundColor: Colors.black,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -132,55 +162,73 @@ class _SubjectPageState extends State<SubjectPage> {
           ),
         ],
       ),
-
     );
-
-
-
-
   }
 
   void _showAddSubjectDialog(BuildContext context) {
     TextEditingController subjectController = TextEditingController();
+    bool isCategory = false;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text("Ajouter un sujet"),
-          content: TextField(
-            controller: subjectController,
-            decoration: const InputDecoration(
-              hintText: "Nom du sujet",
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Annuler"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                String name = subjectController.text.trim();
-                if (name.isNotEmpty) {
-                  await FirestoreService().createSubject(name);
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text("Ajouter"),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Ajouter un sujet"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: subjectController,
+                    decoration: const InputDecoration(
+                      hintText: "Nom du sujet",
+                    ),
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text("Catégorie (pas de flashcards)"),
+                    value: isCategory,
+                    onChanged: (value) {
+                      setState(() => isCategory = value ?? false);
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Annuler"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    String name = subjectController.text.trim();
+                    if (name.isNotEmpty) {
+                      await FirestoreService().createSubject(
+                        name: name,
+                        level: widget.level,
+                        parentPathIds: widget.parentPathIds,
+                        isCategory: isCategory,
+                      );
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text("Ajouter"),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 
-  void _showDeleteDialog(BuildContext context, String subjectId, String subjectName) {
+  void _showDeleteDialog(BuildContext context, String subjectId) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Supprimer le sujet ?"),
-        content: Text("Souhaitez-vous vraiment supprimer \"$subjectName\" ?"),
+        content: const Text("Souhaitez-vous vraiment supprimer ce sujet et tout ce qu'il contient ?"),
         actions: [
           TextButton(
             child: const Text("Annuler"),
@@ -189,7 +237,11 @@ class _SubjectPageState extends State<SubjectPage> {
           ElevatedButton(
             child: const Text("Supprimer"),
             onPressed: () async {
-              await FirestoreService().deleteSubject(subjectId);
+              await FirestoreService().deleteSubject(
+                subjectId: subjectId,
+                level: widget.level,
+                parentPathIds: widget.parentPathIds,
+              );
               Navigator.of(context).pop();
             },
           ),

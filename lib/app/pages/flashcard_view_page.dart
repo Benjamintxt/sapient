@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'edit_flashcard_page.dart';
 
 class FlashcardViewPage extends StatefulWidget {
   final String front;
@@ -6,6 +7,8 @@ class FlashcardViewPage extends StatefulWidget {
   final String flashcardId;
   final String subjectId;
   final String userId;
+  final int level;
+  final List<String>? parentPathIds;
 
   const FlashcardViewPage({
     super.key,
@@ -14,6 +17,8 @@ class FlashcardViewPage extends StatefulWidget {
     required this.flashcardId,
     required this.subjectId,
     required this.userId,
+    required this.level,
+    required this.parentPathIds,
   });
 
   @override
@@ -80,9 +85,19 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
             child: FloatingActionButton(
               heroTag: 'edit',
               onPressed: () {
-                // Tu pourras plus tard ouvrir une page d'édition ici
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Fonction 'Éditer' à venir 😄")),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditFlashcardPage(
+                      initialFront: widget.front,
+                      initialBack: widget.back,
+                      flashcardId: widget.flashcardId,
+                      subjectId: widget.subjectId,
+                      userId: widget.userId,
+                      level: widget.level,
+                      parentPathIds: widget.parentPathIds,
+                    ),
+                  ),
                 );
               },
               backgroundColor: Colors.black,
@@ -90,7 +105,6 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
               child: const Icon(Icons.edit, size: 32, color: Colors.white),
             ),
           ),
-
         ],
       ),
     );
