@@ -42,5 +42,9 @@
   "profile": "Profil",
   "add_subject": "Ajouter un sujet",
   "subject_name_hint": "Nom du sujet",
+
+  "is_category": "Catégorie (pas de flashcards)",
+
+
   "no_subjects": "Aucun sujet pour le moment."
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sapient/services/firestore_services.dart';
 import 'package:sapient/app/pages/flashcards.dart';
-import 'package:sapient/app/pages/profile_page.dart';  // Make sure to import the profile page
+import 'package:sapient/app/pages/profile_page.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SubjectPage extends StatefulWidget {
@@ -36,11 +36,8 @@ class _SubjectPageState extends State<SubjectPage> {
       backgroundColor: const Color(0xFFFCF7FF),
       appBar: AppBar(
         title: Text(
-          widget.title ?? "Sujets",
+          widget.title ?? AppLocalizations.of(context)!.add_subject,
           style: const TextStyle(
-        title: Text(
-          AppLocalizations.of(context)!.add_subject,
-          style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
             fontSize: 22,
@@ -96,7 +93,7 @@ class _SubjectPageState extends State<SubjectPage> {
 
                             return GestureDetector(
                               onLongPress: () {
-                                _showDeleteDialog(context, subjectId);
+                                _showDeleteDialog(context, subjectId, subjectName);
                               },
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -150,18 +147,16 @@ class _SubjectPageState extends State<SubjectPage> {
             ),
           ),
 
-          // Temporary Profile button positioned in the bottom-right corner
           Positioned(
             bottom: 80,
             right: 20,
             child: FloatingActionButton(
               backgroundColor: Colors.purple,
               onPressed: () {
-                // Navigate to the Profile Page when clicked
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const ProfilePage(),  // Make sure ProfilePage exists
+                    builder: (_) => const ProfilePage(),
                   ),
                 );
               },
@@ -169,7 +164,6 @@ class _SubjectPageState extends State<SubjectPage> {
             ),
           ),
 
-          // 🔹 Le trait gris au-dessus du bouton
           const Positioned(
             bottom: 80,
             left: 0,
@@ -177,7 +171,6 @@ class _SubjectPageState extends State<SubjectPage> {
             child: Divider(height: 1, color: Colors.grey),
           ),
 
-          // Bouton flottant positionné en bas
           Positioned(
             bottom: 20,
             right: MediaQuery.of(context).size.width / 2 - 28,
@@ -203,19 +196,19 @@ class _SubjectPageState extends State<SubjectPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text("Ajouter un sujet"),
+              title: Text(AppLocalizations.of(context)!.add_subject),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: subjectController,
-                    decoration: const InputDecoration(
-                      hintText: "Nom du sujet",
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.subject_name_hint,
                     ),
                   ),
                   CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text("Catégorie (pas de flashcards)"),
+                    title: Text(AppLocalizations.of(context)!.is_category),
                     value: isCategory,
                     onChanged: (value) {
                       setState(() => isCategory = value ?? false);
@@ -226,7 +219,7 @@ class _SubjectPageState extends State<SubjectPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text("Annuler"),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -241,48 +234,23 @@ class _SubjectPageState extends State<SubjectPage> {
                       Navigator.pop(context);
                     }
                   },
-                  child: const Text("Ajouter"),
+                  child: Text(AppLocalizations.of(context)!.add),
                 ),
               ],
             );
           },
-        return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.add_subject),
-          content: TextField(
-            controller: subjectController,
-            decoration: InputDecoration(
-              hintText: AppLocalizations.of(context)!.subject_name_hint,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context)!.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                String name = subjectController.text.trim();
-                if (name.isNotEmpty) {
-                  await FirestoreService().createSubject(name);
-                  Navigator.pop(context);
-                }
-              },
-              child: Text(AppLocalizations.of(context)!.add),
-            ),
-          ],
         );
       },
     );
   }
 
-  void _showDeleteDialog(BuildContext context, String subjectId) {
+
+  void _showDeleteDialog(BuildContext context, String subjectId, String subjectName) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.delete_subject),
         content: Text(AppLocalizations.of(context)!.delete_subject_message(subjectName)),
-        title: const Text("Supprimer le sujet ?"),
-        content: const Text("Souhaitez-vous vraiment supprimer ce sujet et tout ce qu'il contient ?"),
         actions: [
           TextButton(
             child: Text(AppLocalizations.of(context)!.cancel),

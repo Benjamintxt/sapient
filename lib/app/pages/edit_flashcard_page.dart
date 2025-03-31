@@ -80,15 +80,7 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
       newFront: editedFront,
       newBack: editedBack,
       level: widget.level,
-      parentPathIds: widget.parentPathIds,
-    await FirestoreService().updateFlashcard(
-      widget.userId,
-      widget.subjectId,
-      widget.flashcardId,
-      editedFront,
-      editedBack,
-    );
-
+      parentPathIds: widget.parentPathIds,);
     Navigator.pop(context);
   }
 
@@ -97,14 +89,6 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFFCF7FF),
       appBar: AppBar(
-        title: const Text(
-          'Éditer la flashcard',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 22,
-          ),
-        ),
         title: Text(AppLocalizations.of(context)!.editFlashcard, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -120,7 +104,6 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
               maxLines: null,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: isEditingFront ? 'Modifier la question...' : 'Modifier la réponse...',
                 hintText: isEditingFront
                     ? AppLocalizations.of(context)!.modifyQuestion : AppLocalizations.of(context)!.modifyAnswer,
                 border: OutlineInputBorder(

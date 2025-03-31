@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'edit_flashcard_page.dart';
-import 'edit_flashcard_page.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class FlashcardViewPage extends StatefulWidget {
@@ -43,7 +42,7 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context)!.flashcard,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
             fontSize: 22,
@@ -98,17 +97,6 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                       userId: widget.userId,
                       level: widget.level,
                       parentPathIds: widget.parentPathIds,
-                    ),
-                  ),
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditFlashcardPage(
-                      initialFront: widget.front,
-                      initialBack: widget.back,
-                      flashcardId: widget.flashcardId,
-                      subjectId: widget.subjectId,
-                      userId: widget.userId,
                     ),
                   ),
                 );
