@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sapient/services/firestore_services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class EditFlashcardPage extends StatefulWidget {
   final String initialFront;
@@ -83,14 +84,7 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFFCF7FF),
       appBar: AppBar(
-        title: const Text(
-          'Éditer la flashcard',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 22,
-          ),
-        ),
+        title: Text(AppLocalizations.of(context)!.editFlashcard, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1,
@@ -105,7 +99,8 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
               maxLines: null,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: isEditingFront ? 'Modifier la question...' : 'Modifier la réponse...',
+                hintText: isEditingFront
+                    ? AppLocalizations.of(context)!.modifyQuestion : AppLocalizations.of(context)!.modifyAnswer,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

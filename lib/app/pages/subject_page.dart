@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sapient/services/firestore_services.dart';
 import 'package:sapient/app/pages/flashcards.dart';
+import 'package:sapient/app/pages/profile_page.dart';  // Make sure to import the profile page
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SubjectPage extends StatefulWidget {
   const SubjectPage({super.key});
@@ -16,13 +18,14 @@ class _SubjectPageState extends State<SubjectPage> {
     _scrollController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFCF7FF),
       appBar: AppBar(
-        title: const Text(
-          "Sujets",
+        title: Text(
+          AppLocalizations.of(context)!.add_subject,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -54,7 +57,7 @@ class _SubjectPageState extends State<SubjectPage> {
                       }
 
                       if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return const Center(child: Text("Aucun sujet pour le moment."));
+                        return Center(child: Text(AppLocalizations.of(context)!.no_subjects));
                       }
 
                       var subjects = snapshot.data!.docs;
@@ -110,6 +113,25 @@ class _SubjectPageState extends State<SubjectPage> {
             ),
           ),
 
+          // Temporary Profile button positioned in the bottom-right corner
+          Positioned(
+            bottom: 80,
+            right: 20,
+            child: FloatingActionButton(
+              backgroundColor: Colors.purple,
+              onPressed: () {
+                // Navigate to the Profile Page when clicked
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ProfilePage(),  // Make sure ProfilePage exists
+                  ),
+                );
+              },
+              child: const Icon(Icons.person, size: 32, color: Colors.white),
+            ),
+          ),
+
           // 🔹 Le trait gris au-dessus du bouton
           const Positioned(
             bottom: 80,
@@ -117,7 +139,6 @@ class _SubjectPageState extends State<SubjectPage> {
             right: 0,
             child: Divider(height: 1, color: Colors.grey),
           ),
-
 
           // Bouton flottant positionné en bas
           Positioned(
@@ -132,12 +153,7 @@ class _SubjectPageState extends State<SubjectPage> {
           ),
         ],
       ),
-
     );
-
-
-
-
   }
 
   void _showAddSubjectDialog(BuildContext context) {
@@ -147,17 +163,17 @@ class _SubjectPageState extends State<SubjectPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Ajouter un sujet"),
+          title: Text(AppLocalizations.of(context)!.add_subject),
           content: TextField(
             controller: subjectController,
-            decoration: const InputDecoration(
-              hintText: "Nom du sujet",
+            decoration: InputDecoration(
+              hintText: AppLocalizations.of(context)!.subject_name_hint,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Annuler"),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -167,7 +183,7 @@ class _SubjectPageState extends State<SubjectPage> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text("Ajouter"),
+              child: Text(AppLocalizations.of(context)!.add),
             ),
           ],
         );
@@ -179,15 +195,15 @@ class _SubjectPageState extends State<SubjectPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Supprimer le sujet ?"),
-        content: Text("Souhaitez-vous vraiment supprimer \"$subjectName\" ?"),
+        title: Text(AppLocalizations.of(context)!.delete_subject),
+        content: Text(AppLocalizations.of(context)!.delete_subject_message(subjectName)),
         actions: [
           TextButton(
-            child: const Text("Annuler"),
+            child: Text(AppLocalizations.of(context)!.cancel),
             onPressed: () => Navigator.of(context).pop(),
           ),
           ElevatedButton(
-            child: const Text("Supprimer"),
+            child: Text(AppLocalizations.of(context)!.delete),
             onPressed: () async {
               await FirestoreService().deleteSubject(subjectId);
               Navigator.of(context).pop();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'edit_flashcard_page.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class FlashcardViewPage extends StatefulWidget {
   final String front;
@@ -35,8 +36,8 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFFCF7FF),
       appBar: AppBar(
-        title: const Text(
-          'Flashcard',
+        title: Text(
+          AppLocalizations.of(context)!.flashcard,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
