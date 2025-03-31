@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sapient/services/firestore_services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class EditFlashcardPage extends StatefulWidget {
   final String initialFront;
@@ -80,6 +81,12 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
       newBack: editedBack,
       level: widget.level,
       parentPathIds: widget.parentPathIds,
+    await FirestoreService().updateFlashcard(
+      widget.userId,
+      widget.subjectId,
+      widget.flashcardId,
+      editedFront,
+      editedBack,
     );
 
     Navigator.pop(context);
@@ -98,6 +105,7 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
             fontSize: 22,
           ),
         ),
+        title: Text(AppLocalizations.of(context)!.editFlashcard, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1,
@@ -113,6 +121,8 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
               autofocus: true,
               decoration: InputDecoration(
                 hintText: isEditingFront ? 'Modifier la question...' : 'Modifier la réponse...',
+                hintText: isEditingFront
+                    ? AppLocalizations.of(context)!.modifyQuestion : AppLocalizations.of(context)!.modifyAnswer,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

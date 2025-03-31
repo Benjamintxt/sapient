@@ -1,0 +1,46 @@
+{
+  "selectLanguage": "Sélectionner la langue",
+  "cancelButton": "Annuler",
+  "changeLanguage": "Changer la langue",
+  "addFlashcard": "Ajouter une Flashcard",
+  "question": "Question",
+  "answer": "Réponse",
+  "editFlashcard": "Éditer la flashcard",
+  "modifyQuestion": "Modifier la question...",
+  "modifyAnswer": "Modifier la réponse...",
+  "front": "Question",
+  "back": "Réponse",
+  "save": "Sauvegarder",
+  "review": "Révision",
+  "noFlashcards": "Aucune flashcard à réviser.",
+  "flashcard": "Flashcard",
+  "edit": "Éditer",
+  "delete": "Supprimer",
+  "add": "Ajouter",
+  "delete_flashcard_message": "Souhaitez-vous vraiment supprimer \"{flashcard}\" ?",
+  "@delete_flashcard_message": {
+      "placeholders": {
+        "flashcard": {
+          "type": "Object"
+        }
+      }
+  },
+  "cancel": "Annuler",
+  "no_flashcards_found": "Aucune flashcard trouvée",
+  "delete_flashcard": "Supprimer la flashcard ?",
+  "flashcards": "Flashcards",
+  "delete_subject_message": "Souhaitez-vous vraiment supprimer \"$subject\" ?",
+    "@delete_subject_message": {
+      "placeholders": {
+        "subject": {
+          "type": "Object"
+        }
+      }
+    },
+  "delete_subject": "Supprimer le sujet",
+  "cancel": "Annuler",
+  "profile": "Profil",
+  "add_subject": "Ajouter un sujet",
+  "subject_name_hint": "Nom du sujet",
+  "no_subjects": "Aucun sujet pour le moment."
+}

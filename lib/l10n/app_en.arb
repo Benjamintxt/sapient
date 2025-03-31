@@ -1,0 +1,46 @@
+{
+  "selectLanguage": "Select Language",
+  "cancelButton": "Cancel",
+  "changeLanguage": "Change Language",
+  "addFlashcard": "Add Flashcard",
+  "question": "Question",
+  "answer": "Answer",
+  "editFlashcard": "Edit Flashcard",
+  "modifyQuestion": "Modify the question...",
+  "modifyAnswer": "Modify the answer...",
+  "front": "Front",
+  "back": "Back",
+  "save": "Save",
+  "review": "Review",
+  "noFlashcards": "No flashcards to review.",
+  "flashcard": "Flashcard",
+  "edit": "Edit",
+  "delete": "Delete",
+  "add": "Add",
+  "delete_flashcard_message": "Do you really want to delete \"{flashcard}\" ?",
+  "@delete_flashcard_message": {
+      "placeholders": {
+        "flashcard": {
+          "type": "Object"
+        }
+      }
+  },
+  "cancel": "Cancel",
+  "no_flashcards_found": "No flashcards found",
+  "delete_flashcard": "Delete flashcard?",
+  "flashcards": "Flashcards",
+  "delete_subject_message": "Do you really want to delete \"$subject\"?",
+    "@delete_subject_message": {
+      "placeholders": {
+        "subject": {
+          "type": "Object"
+        }
+      }
+    },
+  "delete_subject": "Delete Subject",
+  "cancel": "Cancel",
+  "profile": "Profile",
+  "add_subject": "Add a subject",
+  "subject_name_hint": "Subject Name",
+  "no_subjects": "No subjects available at the moment."
+}

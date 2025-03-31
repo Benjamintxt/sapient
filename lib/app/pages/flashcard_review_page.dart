@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class FlashcardReviewPage extends StatefulWidget {
   final String subjectId;
@@ -79,19 +80,12 @@ class _FlashcardReviewPageState extends State<FlashcardReviewPage> {
     if (flashcards.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'Révision',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-              fontSize: 22,
-            ),
-          ),
+          title: Text(AppLocalizations.of(context)!.review, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
           centerTitle: true,
           backgroundColor: Colors.white,
           elevation: 1,
         ),
-        body: const Center(child: Text("Aucune flashcard à réviser.")),
+        body: Center(child: Text(AppLocalizations.of(context)!.noFlashcards)),
       );
     }
 
@@ -101,14 +95,7 @@ class _FlashcardReviewPageState extends State<FlashcardReviewPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Révision',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 22,
-          ),
-        ),
+        title: Text(AppLocalizations.of(context)!.review, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1,

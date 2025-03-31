@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sapient/services/firestore_services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class AddFlashcardPage extends StatefulWidget {
   final String subjectId;
@@ -26,7 +27,7 @@ class _AddFlashcardPageState extends State<AddFlashcardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajouter une Flashcard')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.addFlashcard)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -35,8 +36,8 @@ class _AddFlashcardPageState extends State<AddFlashcardPage> {
             const SizedBox(height: 80),
             TextField(
               controller: questionController,
-              decoration: const InputDecoration(
-                labelText: 'Question',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.question,
                 border: OutlineInputBorder(),
               ),
               maxLines: null,
@@ -44,8 +45,8 @@ class _AddFlashcardPageState extends State<AddFlashcardPage> {
             const SizedBox(height: 20),
             TextField(
               controller: answerController,
-              decoration: const InputDecoration(
-                labelText: 'Réponse',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.answer,
                 border: OutlineInputBorder(),
               ),
               maxLines: null,
@@ -71,7 +72,7 @@ class _AddFlashcardPageState extends State<AddFlashcardPage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(fontSize: 16),
               ),
-              child: const Text('Ajouter Flashcard'),
+              child: Text(AppLocalizations.of(context)!.addFlashcard),
             ),
           ],
         ),

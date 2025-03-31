@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sapient/services/firestore_services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'add_flashcard_page.dart';
 import 'flashcard_review_page.dart';
 import 'flashcard_view_page.dart';
@@ -38,8 +39,8 @@ class _FlashcardPageState extends State<FlashcardPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFFCF7FF),
       appBar: AppBar(
-        title: const Text(
-          "Flashcards",
+        title: Text(
+          AppLocalizations.of(context)!.flashcards,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -65,7 +66,7 @@ class _FlashcardPageState extends State<FlashcardPage> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text("Aucune flashcard trouvée"));
+                  return Center(child: Text(AppLocalizations.of(context)!.no_flashcards_found));
                 }
 
                 return Scrollbar(
@@ -173,15 +174,17 @@ class _FlashcardPageState extends State<FlashcardPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Supprimer la flashcard ?"),
-        content: Text("Souhaitez-vous vraiment supprimer \"$frontText\" ?"),
+        title: Text(AppLocalizations.of(context)!.delete_flashcard),
+        content: Text(
+            AppLocalizations.of(context)!.delete_flashcard_message(frontText)
+        ),
         actions: [
           TextButton(
-            child: const Text("Annuler"),
+            child: Text(AppLocalizations.of(context)!.cancel),
             onPressed: () => Navigator.of(context).pop(),
           ),
           ElevatedButton(
-            child: const Text("Supprimer"),
+            child: Text(AppLocalizations.of(context)!.delete),
             onPressed: () async {
               await _firestoreService.deleteFlashcardAtPath(
                 userId: widget.userId,

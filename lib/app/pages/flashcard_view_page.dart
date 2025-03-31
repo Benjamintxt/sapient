@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'edit_flashcard_page.dart';
+import 'edit_flashcard_page.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class FlashcardViewPage extends StatefulWidget {
   final String front;
@@ -39,8 +41,8 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFFCF7FF),
       appBar: AppBar(
-        title: const Text(
-          'Flashcard',
+        title: Text(
+          AppLocalizations.of(context)!.flashcard,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -96,6 +98,17 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                       userId: widget.userId,
                       level: widget.level,
                       parentPathIds: widget.parentPathIds,
+                    ),
+                  ),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditFlashcardPage(
+                      initialFront: widget.front,
+                      initialBack: widget.back,
+                      flashcardId: widget.flashcardId,
+                      subjectId: widget.subjectId,
+                      userId: widget.userId,
                     ),
                   ),
                 );
