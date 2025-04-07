@@ -151,6 +151,7 @@ class _SubjectPageState extends State<SubjectPage> {
             bottom: 80,
             right: 20,
             child: FloatingActionButton(
+              heroTag: "profile_button",
               backgroundColor: Colors.purple,
               onPressed: () {
                 Navigator.push(
@@ -175,6 +176,7 @@ class _SubjectPageState extends State<SubjectPage> {
             bottom: 20,
             right: MediaQuery.of(context).size.width / 2 - 28,
             child: FloatingActionButton(
+              heroTag: "add_subject_button",
               backgroundColor: Colors.black,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               onPressed: () => _showAddSubjectDialog(context),

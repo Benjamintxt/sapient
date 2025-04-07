@@ -42,9 +42,11 @@
   "profile": "Profile",
   "add_subject": "Add a subject",
   "subject_name_hint": "Subject Name",
-
+  "name": "Name",
+  "email": "Email",
+  "learningGoals": "Learning Goals",
+  "emailNotAvailable" : "Email not available",
   "is_category": "Category (no flashcards)",
-
   "no_subjects": "No subjects available at the moment."
 
 }
