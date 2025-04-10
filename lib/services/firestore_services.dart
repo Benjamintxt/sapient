@@ -13,6 +13,14 @@ class FirestoreService {
     }
   }
 
+  Future<DocumentSnapshot<Map<String, dynamic>>> getUserData(String uid) async {
+    return _db.collection('users').doc(uid).get();
+  }
+
+  Future<void> updateUserData(String uid, Map<String, dynamic> data) async {
+    return _db.collection('users').doc(uid).update(data);
+  }
+
   /// 🔸 Crée un sujet à un niveau donné dans la bonne sous-collection
   Future<void> createSubject({
     required String name,
