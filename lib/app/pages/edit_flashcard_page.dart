@@ -138,94 +138,136 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
   @override
   Widget build(BuildContext context) {
     final currentImage = showFront ? editedImageFront : editedImageBack;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFCF7FF),
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.editFlashcard,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 1,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 32),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: TextField(
-                controller: _controller,
-                maxLines: 1,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: isImageFlashcard
-                      ? "Nom de la flashcard"
-                      : (isEditingFront
-                      ? AppLocalizations.of(context)!.modifyQuestion
-                      : AppLocalizations.of(context)!.modifyAnswer),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                  filled: true,
-                  fillColor: Colors.white,
+      resizeToAvoidBottomInset: true,
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // 🌸 Fond
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/FlashCard View.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned.fill(
+            child: Container(color: Colors.white.withOpacity(0.1)),
+          ),
+
+          // 📛 Titre
+          Positioned(
+            top: 50,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                AppLocalizations.of(context)!.editFlashcard,
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4A148C),
+                  fontFamily: 'Raleway',
+                  shadows: [
+                    Shadow(
+                      blurRadius: 3,
+                      color: Colors.black26,
+                      offset: Offset(1, 2),
+                    ),
+                  ],
                 ),
-                style: const TextStyle(fontSize: 20),
-                textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 20),
-            if (isImageFlashcard)
-              GestureDetector(
-                onTap: () => setState(() => showFront = !showFront),
-                child: Container(
-                  height: 200,
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4)),
-                    ],
-                  ),
-                  child: currentImage != null
-                      ? ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.network(currentImage, fit: BoxFit.cover, width: double.infinity),
-                  )
-                      : const Center(child: Text("Image à insérer")),
-                ),
+          ),
+
+          // ✏️ Contenu scrollable avec padding clavier
+          Positioned.fill(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                top: 140,
+                left: 24,
+                right: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 40,
               ),
-            const SizedBox(height: 40),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  FloatingActionButton(
-                    heroTag: 'edit-front',
-                    onPressed: isImageFlashcard ? () => _captureImageForSide(true) : () => _switchSide(true),
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.help_outline, color: Colors.white),
+                  TextField(
+                    controller: _controller,
+                    autofocus: true,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 20),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
                   ),
-                  FloatingActionButton(
-                    heroTag: 'edit-back',
-                    onPressed: isImageFlashcard ? () => _captureImageForSide(false) : () => _switchSide(false),
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.priority_high, color: Colors.white),
-                  ),
-                  FloatingActionButton(
-                    heroTag: 'save',
-                    onPressed: _saveChanges,
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.check, color: Colors.white),
+                  const SizedBox(height: 24),
+                  if (isImageFlashcard)
+                    GestureDetector(
+                      onTap: () => setState(() => showFront = !showFront),
+                      child: Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: currentImage != null
+                            ? ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            currentImage,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
+                        )
+                            : const Center(child: Text("Image manquante")),
+                      ),
+                    ),
+                  const SizedBox(height: 40),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildActionButton(Icons.help_outline, () {
+                        isImageFlashcard
+                            ? _captureImageForSide(true)
+                            : _switchSide(true);
+                      }),
+                      _buildActionButton(Icons.priority_high, () {
+                        isImageFlashcard
+                            ? _captureImageForSide(false)
+                            : _switchSide(false);
+                      }),
+                      _buildActionButton(Icons.check, _saveChanges),
+                    ],
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+
   }
+
+  Widget _buildActionButton(IconData icon, VoidCallback onPressed) {
+    return FloatingActionButton(
+      heroTag: icon.codePoint.toString(),
+      onPressed: onPressed,
+      backgroundColor: Colors.deepPurple,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Icon(icon, color: Colors.white),
+    );
+  }
+
+
 }

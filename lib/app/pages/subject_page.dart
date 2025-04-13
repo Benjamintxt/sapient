@@ -52,6 +52,17 @@ class _SubjectPageState extends State<SubjectPage> {
             ),
           ),
 
+          // 🔙 Flèche retour personnalisée
+          if (widget.level > 0)
+            Positioned(
+              top: 55,
+              left: 16,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF4A148C), size: 28),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+
           // ✅ Ajoute ici le titre personnalisé :
           Positioned(
             top: 50,

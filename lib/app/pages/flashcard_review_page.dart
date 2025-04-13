@@ -77,76 +77,113 @@ class _FlashcardReviewPageState extends State<FlashcardReviewPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (flashcards.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.review, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
-          centerTitle: true,
-          backgroundColor: Colors.white,
-          elevation: 1,
-        ),
-        body: Center(child: Text(AppLocalizations.of(context)!.noFlashcards)),
-      );
-    }
-
-    final card = flashcards[currentIndex];
-    final String front = card['front'] ?? '';
-    final String back = card['back'] ?? '';
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.review, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 1,
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      body: Stack(
         children: [
-          GestureDetector(
-            onTap: _flipCard,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              padding: const EdgeInsets.all(24),
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              height: 200,
-              alignment: Alignment.center,
+          // 🌸 Fond d'écran
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/FlashCard View.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned.fill(
+            child: Container(color: Colors.white.withOpacity(0.1)),
+          ),
+
+          // 🔙 Flèche de retour
+          Positioned(
+            top: 55,
+            left: 16,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF4A148C), size: 28),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+
+          // 📛 Titre
+          Positioned(
+            top: 50,
+            left: 0,
+            right: 0,
+            child: Center(
               child: Text(
-                showQuestion ? front : back,
-                style: const TextStyle(fontSize: 20),
-                textAlign: TextAlign.center,
+                AppLocalizations.of(context)!.review,
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4A148C),
+                  fontFamily: 'Raleway',
+                  shadows: [
+                    Shadow(
+                      blurRadius: 3,
+                      color: Colors.black26,
+                      offset: Offset(1, 2),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios),
-                onPressed: _previousCard,
-              ),
-              const SizedBox(width: 24),
-              IconButton(
-                icon: const Icon(Icons.arrow_forward_ios),
-                onPressed: _nextCard,
-              ),
-            ],
-          )
+
+          // 🧠 Contenu principal
+          if (flashcards.isEmpty)
+            const Center(child: CircularProgressIndicator())
+          else
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: _flipCard,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    padding: const EdgeInsets.all(24),
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    height: 200,
+                    alignment: Alignment.center,
+                    child: Text(
+                      showQuestion
+                          ? flashcards[currentIndex]['front'] ?? ''
+                          : flashcards[currentIndex]['back'] ?? '',
+                      style: const TextStyle(fontSize: 20),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios),
+                      onPressed: _previousCard,
+                    ),
+                    const SizedBox(width: 24),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios),
+                      onPressed: _nextCard,
+                    ),
+                  ],
+                )
+              ],
+            ),
         ],
       ),
     );
   }
+
 }

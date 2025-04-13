@@ -63,7 +63,9 @@
   "profile_name": "Nom",
   "profile_email": "Email",
   "learning_objectives": "Objectifs d’apprentissage",
-  "change_language": "Changer la langue"
+  "change_language": "Changer la langue",
+
+  "profile_progression": "Progression"
 
 
 

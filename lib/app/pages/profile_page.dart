@@ -128,11 +128,34 @@ class _ProfilePageState extends State<ProfilePage> {
                   Icons.language,
                       () => _showLanguagePickerDialog(context),
                 ),
+
+
               ],
             ),
           ),
+
+          // 🌟 Nouveau bouton flottant progression
+          Positioned(
+            bottom: 20,
+            left: MediaQuery.of(context).size.width / 2 - 28, // centré
+            child: FloatingActionButton(
+              heroTag: "progress_button",
+              backgroundColor: Colors.deepPurple,
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("🚧 Statistiques à venir !")),
+                );
+              },
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: const Icon(Icons.bar_chart, color: Colors.white),
+            ),
+          ),
+
         ],
       ),
+
+
+
     );
   }
 
@@ -191,6 +214,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
 
+
+
   Widget _buildIconCard(String label, IconData icon, VoidCallback onTap) {
     return Card(
       color: Colors.white.withOpacity(0.9),
@@ -203,6 +228,8 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+
 
   void _showEditDialog(String field, String currentValue) {
     TextEditingController controller = TextEditingController(text: currentValue);

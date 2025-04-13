@@ -43,98 +43,138 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFCF7FF),
-      appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.flashcard,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 22,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 1,
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      body: Stack(
         children: [
-          GestureDetector(
-            onTap: _flipCard,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.all(24),
-              margin: const EdgeInsets.symmetric(horizontal: 24),
-              constraints: const BoxConstraints(
-                minHeight: 200,
-                maxHeight: 300,
-                maxWidth: double.infinity, // 👈 Pour prendre toute la largeur
-              ),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: () {
-                final imageUrl = showFront ? widget.imageFrontUrl : widget.imageBackUrl;
-                if (imageUrl != null && imageUrl.isNotEmpty) {
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover, // 👈 remplissage plus large
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                  );
-                } else {
-                  final text = showFront ? widget.front : widget.back;
-                  return Text(
-                    text,
-                    style: const TextStyle(fontSize: 20),
-                    textAlign: TextAlign.center,
-                  );
-                }
-              }(),
+          // 🌸 Fond
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/FlashCard View.png',
+              fit: BoxFit.cover,
             ),
           ),
-          const SizedBox(height: 40),
-          Center(
-            child: FloatingActionButton(
-              heroTag: 'edit',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EditFlashcardPage(
-                      initialFront: widget.front,
-                      initialBack: widget.back,
-                      flashcardId: widget.flashcardId,
-                      subjectId: widget.subjectId,
-                      userId: widget.userId,
-                      level: widget.level,
-                      parentPathIds: widget.parentPathIds,
-                      imageFrontUrl: widget.imageFrontUrl, // ✅ Ajoute ceci
-                      imageBackUrl: widget.imageBackUrl,
-                    ),
-                  ),
-                );
-              },
-              backgroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.edit, size: 32, color: Colors.white),
+          Positioned.fill(
+            child: Container(color: Colors.white.withOpacity(0.1)),
+          ),
+
+          // 🔙 Flèche retour
+          Positioned(
+            top: 55,
+            left: 16,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF4A148C), size: 28),
+              onPressed: () => Navigator.pop(context),
             ),
+          ),
+
+          // 📛 Titre "Flashcard"
+          Positioned(
+            top: 50,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                AppLocalizations.of(context)!.flashcard,
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4A148C),
+                  fontFamily: 'Raleway',
+                  shadows: [
+                    Shadow(
+                      blurRadius: 3,
+                      color: Colors.black26,
+                      offset: Offset(1, 2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 🧠 Contenu principal
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: _flipCard,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(24),
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  constraints: const BoxConstraints(
+                    minHeight: 200,
+                    maxHeight: 300,
+                    maxWidth: double.infinity,
+                  ),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: () {
+                    final imageUrl = showFront ? widget.imageFrontUrl : widget.imageBackUrl;
+                    if (imageUrl != null && imageUrl.isNotEmpty) {
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      );
+                    } else {
+                      final text = showFront ? widget.front : widget.back;
+                      return Text(
+                        text,
+                        style: const TextStyle(fontSize: 20),
+                        textAlign: TextAlign.center,
+                      );
+                    }
+                  }(),
+                ),
+              ),
+              const SizedBox(height: 40),
+              Center(
+                child: FloatingActionButton(
+                  heroTag: 'edit',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditFlashcardPage(
+                          initialFront: widget.front,
+                          initialBack: widget.back,
+                          flashcardId: widget.flashcardId,
+                          subjectId: widget.subjectId,
+                          userId: widget.userId,
+                          level: widget.level,
+                          parentPathIds: widget.parentPathIds,
+                          imageFrontUrl: widget.imageFrontUrl,
+                          imageBackUrl: widget.imageBackUrl,
+                        ),
+                      ),
+                    );
+                  },
+                  backgroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.edit, size: 32, color: Colors.white),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+
 }
