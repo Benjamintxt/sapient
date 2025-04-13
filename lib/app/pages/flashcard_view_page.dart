@@ -11,6 +11,9 @@ class FlashcardViewPage extends StatefulWidget {
   final int level;
   final List<String>? parentPathIds;
 
+  final String? imageFrontUrl;
+  final String? imageBackUrl;
+
   const FlashcardViewPage({
     super.key,
     required this.front,
@@ -20,6 +23,8 @@ class FlashcardViewPage extends StatefulWidget {
     required this.userId,
     required this.level,
     required this.parentPathIds,
+    this.imageFrontUrl,
+    this.imageBackUrl,
   });
 
   @override
@@ -61,7 +66,11 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
               duration: const Duration(milliseconds: 300),
               padding: const EdgeInsets.all(24),
               margin: const EdgeInsets.symmetric(horizontal: 24),
-              height: 200,
+              constraints: const BoxConstraints(
+                minHeight: 200,
+                maxHeight: 300,
+                maxWidth: double.infinity, // 👈 Pour prendre toute la largeur
+              ),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -74,11 +83,27 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                   ),
                 ],
               ),
-              child: Text(
-                showFront ? widget.front : widget.back,
-                style: const TextStyle(fontSize: 20),
-                textAlign: TextAlign.center,
-              ),
+              child: () {
+                final imageUrl = showFront ? widget.imageFrontUrl : widget.imageBackUrl;
+                if (imageUrl != null && imageUrl.isNotEmpty) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover, // 👈 remplissage plus large
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  );
+                } else {
+                  final text = showFront ? widget.front : widget.back;
+                  return Text(
+                    text,
+                    style: const TextStyle(fontSize: 20),
+                    textAlign: TextAlign.center,
+                  );
+                }
+              }(),
             ),
           ),
           const SizedBox(height: 40),

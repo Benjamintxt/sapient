@@ -47,6 +47,17 @@
   "learningGoals": "Learning Goals",
   "emailNotAvailable" : "Email not available",
   "is_category": "Category (no flashcards)",
-  "no_subjects": "No subjects available at the moment."
+  "no_subjects": "No subjects available at the moment.",
+  "imagePlaceholder": "Image flashcard",
+  "flashcardAdded": "Flashcard added with image!",
+
+  "chooseImageSide": "Choose the image side",
+  "flashcardNameHint": "Flashcard name",
+
+  "addSecondSide": "Add the other side too?",
+  "yes": "Yes",
+  "no": "No"
+
+
 
 }

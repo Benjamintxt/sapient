@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'package:uuid/uuid.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -147,7 +150,7 @@ class FirestoreService {
     await docRef.delete();
   }
 
-  /// 🔸 Ajouter une flashcard dans l’arborescence hiérarchique
+  /// 🔸 Ajouter une flashcard avec texte et/ou image
   Future<void> addFlashcardAtPath({
     required String userId,
     required String subjectId,
@@ -155,6 +158,8 @@ class FirestoreService {
     required String back,
     required int level,
     required List<String>? parentPathIds,
+    String? imageFrontUrl, // ✅ facultatif
+    String? imageBackUrl,  // ✅ facultatif (à venir)
   }) async {
     if (parentPathIds == null || parentPathIds.length != level) {
       throw Exception("Invalid parentPathIds for level $level");
@@ -169,11 +174,18 @@ class FirestoreService {
 
     final docRef = currentRef.collection('subsubject$level').doc(subjectId);
 
-    await docRef.collection('flashcards').add({
+    // On prépare un Map dynamique
+    final data = {
       'front': front,
       'back': back,
       'timestamp': FieldValue.serverTimestamp(),
-    });
+    };
+
+    // Ajoute les images si elles sont présentes
+    if (imageFrontUrl != null) data['imageFrontUrl'] = imageFrontUrl;
+    if (imageBackUrl != null) data['imageBackUrl'] = imageBackUrl;
+
+    await docRef.collection('flashcards').add(data);
   }
 
   /// 🔸 Lire les flashcards dans l’arborescence hiérarchique
@@ -268,6 +280,17 @@ class FirestoreService {
       'back': newBack,
       'timestamp': FieldValue.serverTimestamp(),
     });
+  }
+
+
+  /// 🔸 Upload une image et retourne son URL
+  Future<String> uploadImageAndGetUrl(File image) async {
+    final filename = const Uuid().v4(); // nom unique
+    final ref = FirebaseStorage.instance.ref().child('flashcards/$filename.jpg');
+
+    final uploadTask = await ref.putFile(image);
+    final url = await uploadTask.ref.getDownloadURL();
+    return url;
   }
 
 
