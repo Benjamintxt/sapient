@@ -162,7 +162,12 @@ class _FlashcardPageState extends State<FlashcardPage> {
 
                         if (firstImage != null) {
                           final firestore = FirestoreService();
-                          final firstUrl = await firestore.uploadImageAndGetUrl(firstImage);
+                          final firstUrl = await firestore.uploadImageAndGetUrl(
+                            firstImage,
+                            widget.userId,
+                            widget.subjectId,
+                            widget.parentPathIds,
+                          );
 
                           // 👉 Demande à l'utilisateur s’il veut ajouter aussi l’autre côté
                           final wantSecondSide = await showDialog<bool>(
@@ -192,7 +197,12 @@ class _FlashcardPageState extends State<FlashcardPage> {
                               MaterialPageRoute(builder: (context) => const CameraPage()),
                             );
                             if (secondImage != null) {
-                              secondUrl = await firestore.uploadImageAndGetUrl(secondImage);
+                              secondUrl = await firestore.uploadImageAndGetUrl(
+                                secondImage,
+                                widget.userId,
+                                widget.subjectId,
+                                widget.parentPathIds,
+                              );
                             }
                           }
 

@@ -262,9 +262,36 @@ class FirestoreService {
     }
 
     final docRef = currentRef.collection('subsubject$level').doc(subjectId);
+    final flashcardRef = docRef.collection('flashcards').doc(flashcardId);
 
-    await docRef.collection('flashcards').doc(flashcardId).delete();
+    // 🔍 On récupère les données de la carte avant de la supprimer
+    final snapshot = await flashcardRef.get();
+    final data = snapshot.data() as Map<String, dynamic>?;
+
+    if (data != null) {
+      final imageFrontUrl = data['imageFrontUrl'];
+      final imageBackUrl = data['imageBackUrl'];
+
+      // 🧽 Supprimer les images de Firebase Storage si elles existent
+      Future<void> deleteImage(String? imageUrl) async {
+        if (imageUrl != null && imageUrl.toString().isNotEmpty) {
+          try {
+            final ref = FirebaseStorage.instance.refFromURL(imageUrl);
+            await ref.delete();
+          } catch (e) {
+            print("Erreur lors de la suppression de l’image : $e");
+          }
+        }
+      }
+
+      await deleteImage(imageFrontUrl);
+      await deleteImage(imageBackUrl);
+    }
+
+    // 🔥 Enfin, on supprime la carte dans Firestore
+    await flashcardRef.delete();
   }
+
 
 // 🔄 Mise à jour d'une flashcard
   Future<void> updateFlashcard(String userId, String subjectId, String flashcardId, String newFront, String newBack) async {
@@ -284,14 +311,48 @@ class FirestoreService {
 
 
   /// 🔸 Upload une image et retourne son URL
-  Future<String> uploadImageAndGetUrl(File image) async {
-    final filename = const Uuid().v4(); // nom unique
-    final ref = FirebaseStorage.instance.ref().child('flashcards/$filename.jpg');
+  Future<String> uploadImageAndGetUrl(
+      File image,
+      String userId,
+      String subjectId,
+      List<String>? parentPathIds,
+      ) async {
+    final fileName = const Uuid().v4(); // ou une autre méthode pour générer un nom unique
 
-    final uploadTask = await ref.putFile(image);
-    final url = await uploadTask.ref.getDownloadURL();
-    return url;
+    // Construit le chemin hiérarchique
+    final pathSegments = [
+      'flashcards',
+      userId,
+      subjectId,
+      ...(parentPathIds ?? []),
+      '$fileName.jpg',
+    ];
+
+    final storageRef = FirebaseStorage.instance.ref().child(pathSegments.join('/'));
+
+    await storageRef.putFile(image);
+    return await storageRef.getDownloadURL();
+
   }
 
+
+  DocumentReference buildFlashcardDocRef({
+    required String userId,
+    required String subjectId,
+    required int level,
+    required List<String> parentPathIds,
+  }) {
+    DocumentReference currentRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('subjects')
+        .doc(parentPathIds[0]);
+
+    for (int i = 1; i < level; i++) {
+      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
+    }
+
+    return currentRef.collection('subsubject$level').doc(subjectId);
+  }
 
 }

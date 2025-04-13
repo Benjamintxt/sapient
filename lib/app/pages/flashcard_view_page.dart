@@ -122,6 +122,8 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                       userId: widget.userId,
                       level: widget.level,
                       parentPathIds: widget.parentPathIds,
+                      imageFrontUrl: widget.imageFrontUrl, // ✅ Ajoute ceci
+                      imageBackUrl: widget.imageBackUrl,
                     ),
                   ),
                 );
