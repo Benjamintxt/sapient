@@ -27,7 +27,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _fetchUserData() async {
-    print("Fetching user data for UID: $_uid");
     if (_uid != null) {
       final snapshot = await _firestoreService.getUserData(_uid!);
       if (snapshot.exists) {
@@ -47,13 +46,15 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _updateField(String field, String newValue) async { // Make it async
-    print("Updating field: $field with new value: $newValue for UID : $_uid");
+  void _updateField(String field, String newValue) async {
     if (_uid != null) {
       try {
-        await FirebaseFirestore.instance.collection('users').doc(_uid!).set({field: newValue}, SetOptions(merge: true));
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_uid!)
+            .set({field: newValue}, SetOptions(merge: true));
         setState(() {
-          _userData[field] = newValue; // Update the local data immediately
+          _userData[field] = newValue;
         });
       } catch (e) {
         print("Error updating/creating document: $e");
@@ -73,33 +74,115 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.profile),
-        backgroundColor: Colors.white,
-        centerTitle: true,
-        elevation: 1,
+        title: const Text('Profil'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.deepPurple,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            _buildProfilePicture(),
-            _buildEditableField(AppLocalizations.of(context)!.name, 'name', _userData['name'] ?? ''),
-            ListTile(
-              title: Text(AppLocalizations.of(context)!.email),
-              subtitle: Text(_userEmail ?? AppLocalizations.of(context)!.emailNotAvailable),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/Screen profil.png',
+              fit: BoxFit.cover,
             ),
-            _buildEditableField(
-                AppLocalizations.of(context)!.learningGoals, 'learningGoals', _userData['learningGoals'] ?? ''),
-            // Add other editable fields here
-            ListTile(
-              title: Text(AppLocalizations.of(context)!.changeLanguage),
-              trailing: const Icon(Icons.language),
-              onTap: () {
-                _showLanguagePickerDialog(context);
-              },
+          ),
+          Positioned.fill(
+            child: Container(
+              color: Colors.white.withOpacity(0.15),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 48,
+                  backgroundColor: Colors.deepPurple.shade100,
+                  child: const Icon(Icons.person, size: 48, color: Colors.deepPurple),
+                ),
+                const SizedBox(height: 32),
+                _buildEditableCard(
+                  AppLocalizations.of(context)!.profile_name,
+                  _userData['name'] ?? '',
+                      () => _showEditDialog('name', _userData['name'] ?? ''),
+                ),
+                const SizedBox(height: 12),
+                _buildStaticCard(
+                  AppLocalizations.of(context)!.profile_email,
+                  _userEmail ?? '',
+                ),
+                const SizedBox(height: 12),
+                _buildEditableCard(
+                  AppLocalizations.of(context)!.learning_objectives,
+                  _userData['objectives'] ?? '',
+                      () => _showEditDialog('objectives', _userData['objectives'] ?? ''),
+                ),
+                const SizedBox(height: 12),
+                _buildIconCard(
+                  AppLocalizations.of(context)!.change_language,
+                  Icons.language,
+                      () => _showLanguagePickerDialog(context),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditableCard(String label, String value, VoidCallback onEdit) {
+    return Card(
+      color: Colors.white.withOpacity(0.9),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                  const SizedBox(height: 4),
+                  Text(value, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.deepPurple),
+              onPressed: onEdit,
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStaticCard(String label, String value) {
+    return Card(
+      color: Colors.white.withOpacity(0.9),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                  const SizedBox(height: 4),
+                  Text(value, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                ],
+              ),
             ),
           ],
         ),
@@ -107,54 +190,48 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildProfilePicture() {
-    return const CircleAvatar(
-      radius: 50,
-      child: Icon(Icons.person),
-    );
-  }
 
-  Widget _buildEditableField(String label, String field, String value) {
-    return ListTile(
-      title: Text(label),
-      subtitle: Text(value),
-      trailing: const Icon(Icons.edit),
-      onTap: () {
-        _showEditDialog(field, value);
-      },
+  Widget _buildIconCard(String label, IconData icon, VoidCallback onTap) {
+    return Card(
+      color: Colors.white.withOpacity(0.9),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: ListTile(
+        title: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+        trailing: Icon(icon, color: Colors.deepPurple),
+        onTap: onTap,
+      ),
     );
   }
 
   void _showEditDialog(String field, String currentValue) {
     TextEditingController controller = TextEditingController(text: currentValue);
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Edit $field'),
-          content: TextField(
-            controller: controller,
-          ),
+        context: context,
+        builder: (BuildContext context) {
+      return AlertDialog(
+          title: Text('${AppLocalizations.of(context)!.edit} $field'),
+          content: TextField(controller: controller),
           actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(AppLocalizations.of(context)!.cancelButton),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _updateField(field, controller.text);
-                Navigator.pop(context);
-              },
-              child: Text(AppLocalizations.of(context)!.save),
-            ),
+          ElevatedButton(
+          onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.cancelButton),
+          ),
           ],
-        );
-      },
+      );
+        },
     );
   }
 
+  Widget _buildLanguageOption(BuildContext context, String label, Locale locale, AppState appState) {
+    return ListTile(
+      title: Text(label),
+      onTap: () {
+        appState.changeLanguage(locale);
+        Navigator.pop(context);
+      },
+    );
+  }
   void _showLanguagePickerDialog(BuildContext context) {
     final appState = AppState.of(context);
     showDialog(
@@ -171,9 +248,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               child: Text(AppLocalizations.of(context)!.cancelButton),
             ),
           ],
@@ -182,13 +257,5 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildLanguageOption(BuildContext context, String label, Locale locale, AppState appState) {
-    return ListTile(
-      title: Text(label),
-      onTap: () {
-        appState.changeLanguage(locale);
-        Navigator.pop(context);
-      },
-    );
-  }
+
 }

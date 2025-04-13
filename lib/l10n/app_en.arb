@@ -56,7 +56,12 @@
 
   "addSecondSide": "Add the other side too?",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+
+  "profile_name": "Name",
+  "profile_email": "Email",
+  "learning_objectives": "Learning objectives",
+  "change_language": "Change language"
 
 
 
