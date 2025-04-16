@@ -114,12 +114,13 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
         parentPathIds: widget.parentPathIds,
       );
 
-      final docRef = FirestoreService().buildFlashcardDocRef(
+      final docRef = FirestoreService().getSubSubjectDocRef(
         userId: widget.userId,
         subjectId: widget.subjectId,
         level: widget.level,
         parentPathIds: widget.parentPathIds!,
       );
+
 
       await docRef.collection('flashcards').doc(widget.flashcardId).update({
         if (editedImageFront != null) 'imageFrontUrl': editedImageFront,

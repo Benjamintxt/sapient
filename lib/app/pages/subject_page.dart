@@ -6,6 +6,7 @@ import 'package:sapient/app/pages/flashcards.dart';
 import 'package:sapient/app/pages/profile_page.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sapient/app/pages/statistics_page.dart';
 
 class SubjectPage extends StatefulWidget {
   final List<String>? parentPathIds;
@@ -36,7 +37,6 @@ class _SubjectPageState extends State<SubjectPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-
       body: Stack(
         children: [
           // 🌸 Fond pastel
@@ -224,6 +224,18 @@ class _SubjectPageState extends State<SubjectPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: const Icon(Icons.person, color: Colors.white),
                 ),
+
+                FloatingActionButton(
+                  heroTag: "stats_button",
+                  backgroundColor: Colors.deepPurple,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("🚧 Page Succès à venir !")),
+                    );
+                  },
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: const Icon(Icons.emoji_events, color: Colors.white), // 🏆 Icône trophée
+                ),
                 FloatingActionButton(
                   heroTag: "logout_button",
                   backgroundColor: Colors.deepPurple,
@@ -244,6 +256,8 @@ class _SubjectPageState extends State<SubjectPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: const Icon(Icons.logout, color: Colors.white),
                 ),
+
+
               ],
             ),
           ),
@@ -377,4 +391,7 @@ class _SubjectPageState extends State<SubjectPage> {
       ),
     );
   }
+
+
+
 }

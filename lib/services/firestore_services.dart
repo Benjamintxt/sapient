@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // 🔐 Utils - Authentification
   static String? getCurrentUserUid() {
     try {
       return FirebaseAuth.instance.currentUser?.uid;
@@ -16,22 +17,48 @@ class FirestoreService {
     }
   }
 
+  /// 🔹 Récupère les données de l'utilisateur
   Future<DocumentSnapshot<Map<String, dynamic>>> getUserData(String uid) async {
     return _db.collection('users').doc(uid).get();
   }
 
+  /// 🔹 Met à jour les données de l'utilisateur
   Future<void> updateUserData(String uid, Map<String, dynamic> data) async {
     return _db.collection('users').doc(uid).update(data);
   }
 
-  /// 🔸 Crée un sujet à un niveau donné dans la bonne sous-collection
+  // 📁 Navigation hiérarchique
+
+  /// 🔹 Génère le DocumentReference d’un sujet à n’importe quel niveau
+  DocumentReference getSubSubjectDocRef({
+    required String userId,
+    required int level,
+    required List<String> parentPathIds,
+    required String subjectId,
+  }) {
+    if (parentPathIds.length != level) {
+      throw Exception("Invalid parentPathIds for level $level");
+    }
+
+    DocumentReference currentRef = _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
+
+    for (int i = 1; i < level; i++) {
+      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
+    }
+
+    return currentRef.collection('subsubject$level').doc(subjectId);
+  }
+
+  // 📚 Sujets
+
+  /// 🔹 Crée un sujet (matière ou catégorie)
   Future<void> createSubject({
     required String name,
     required int level,
     required bool isCategory,
     List<String>? parentPathIds,
   }) async {
-    String? userId = getCurrentUserUid();
+    final String? userId = getCurrentUserUid();
     if (userId == null) throw Exception("User not authenticated.");
 
     String formattedDate = DateFormat('dd.MM.yyyy').format(DateTime.now());
@@ -45,9 +72,7 @@ class FirestoreService {
         throw Exception("Invalid parentPathIds for level $level");
       }
 
-      DocumentReference currentRef =
-      _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
-
+      DocumentReference currentRef = _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
       for (int i = 1; i < level; i++) {
         currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
       }
@@ -64,9 +89,9 @@ class FirestoreService {
     });
   }
 
-  /// 🔸 Récupère les sujets au bon niveau et parent
+  /// 🔹 Récupère les sujets à un niveau donné
   Stream<QuerySnapshot> getSubjectsAtLevel(int level, List<String>? parentPathIds) {
-    String? userId = getCurrentUserUid();
+    final String? userId = getCurrentUserUid();
     if (userId == null) throw Exception("User not authenticated.");
 
     CollectionReference ref;
@@ -78,9 +103,7 @@ class FirestoreService {
         throw Exception("Invalid parentPathIds for level $level");
       }
 
-      DocumentReference currentRef =
-      _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
-
+      DocumentReference currentRef = _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
       for (int i = 1; i < level; i++) {
         currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
       }
@@ -91,33 +114,21 @@ class FirestoreService {
     return ref.orderBy('createdAt', descending: false).snapshots();
   }
 
-  /// 🔸 Supprime récursivement un sujet et ses enfants à tous les niveaux
+  /// 🔹 Supprime récursivement un sujet et ses enfants
   Future<void> deleteSubject({
     required String subjectId,
     required int level,
     required List<String>? parentPathIds,
   }) async {
-    String? userId = getCurrentUserUid();
+    final String? userId = getCurrentUserUid();
     if (userId == null) throw Exception("User not authenticated.");
 
-    DocumentReference docRef;
-
-    if (level == 0) {
-      docRef = _db.collection('users').doc(userId).collection('subjects').doc(subjectId);
-    } else {
-      if (parentPathIds == null || parentPathIds.length != level) {
-        throw Exception("Invalid parentPathIds for level $level");
-      }
-
-      DocumentReference currentRef =
-      _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
-
-      for (int i = 1; i < level; i++) {
-        currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
-      }
-
-      docRef = currentRef.collection('subsubject$level').doc(subjectId);
-    }
+    final docRef = getSubSubjectDocRef(
+      userId: userId,
+      level: level,
+      parentPathIds: parentPathIds!,
+      subjectId: subjectId,
+    );
 
     final docSnapshot = await docRef.get();
     if (!docSnapshot.exists) return;
@@ -150,7 +161,43 @@ class FirestoreService {
     await docRef.delete();
   }
 
-  /// 🔸 Ajouter une flashcard avec texte et/ou image
+  // 🧠 Flashcards
+
+  /// 🔹 Récupère les flashcards (Future)
+  Future<QuerySnapshot<Map<String, dynamic>>> getFlashcardsRaw({
+    required String userId,
+    required String subjectId,
+    required int level,
+    required List<String>? parentPathIds,
+  }) async {
+    final docRef = getSubSubjectDocRef(
+      userId: userId,
+      level: level,
+      parentPathIds: parentPathIds!,
+      subjectId: subjectId,
+    );
+
+    return await docRef.collection('flashcards').orderBy('timestamp').get();
+  }
+
+  /// 🔹 Récupère les flashcards (Stream)
+  Stream<QuerySnapshot> getFlashcardsAtPath({
+    required String userId,
+    required String subjectId,
+    required int level,
+    required List<String>? parentPathIds,
+  }) {
+    final docRef = getSubSubjectDocRef(
+      userId: userId,
+      level: level,
+      parentPathIds: parentPathIds!,
+      subjectId: subjectId,
+    );
+
+    return docRef.collection('flashcards').orderBy('timestamp', descending: true).snapshots();
+  }
+
+  /// 🔹 Ajoute une flashcard
   Future<void> addFlashcardAtPath({
     required String userId,
     required String subjectId,
@@ -158,61 +205,29 @@ class FirestoreService {
     required String back,
     required int level,
     required List<String>? parentPathIds,
-    String? imageFrontUrl, // ✅ facultatif
-    String? imageBackUrl,  // ✅ facultatif (à venir)
+    String? imageFrontUrl,
+    String? imageBackUrl,
   }) async {
-    if (parentPathIds == null || parentPathIds.length != level) {
-      throw Exception("Invalid parentPathIds for level $level");
-    }
+    final docRef = getSubSubjectDocRef(
+      userId: userId,
+      level: level,
+      parentPathIds: parentPathIds!,
+      subjectId: subjectId,
+    );
 
-    DocumentReference currentRef =
-    _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
-
-    for (int i = 1; i < level; i++) {
-      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
-    }
-
-    final docRef = currentRef.collection('subsubject$level').doc(subjectId);
-
-    // On prépare un Map dynamique
     final data = {
       'front': front,
       'back': back,
       'timestamp': FieldValue.serverTimestamp(),
     };
 
-    // Ajoute les images si elles sont présentes
     if (imageFrontUrl != null) data['imageFrontUrl'] = imageFrontUrl;
     if (imageBackUrl != null) data['imageBackUrl'] = imageBackUrl;
 
     await docRef.collection('flashcards').add(data);
   }
 
-  /// 🔸 Lire les flashcards dans l’arborescence hiérarchique
-  Stream<QuerySnapshot> getFlashcardsAtPath({
-    required String userId,
-    required String subjectId,
-    required int level,
-    required List<String>? parentPathIds,
-  }) {
-    if (parentPathIds == null || parentPathIds.length != level) {
-      throw Exception("Invalid parentPathIds for level $level");
-    }
-
-    DocumentReference currentRef =
-    _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
-
-    for (int i = 1; i < level; i++) {
-      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
-    }
-
-    final docRef = currentRef.collection('subsubject$level').doc(subjectId);
-
-    return docRef.collection('flashcards').orderBy('timestamp', descending: true).snapshots();
-  }
-
-
-  /// 🔸 Editer une flashcard
+  /// 🔹 Met à jour une flashcard
   Future<void> updateFlashcardAtPath({
     required String userId,
     required String subjectId,
@@ -222,18 +237,12 @@ class FirestoreService {
     required int level,
     required List<String>? parentPathIds,
   }) async {
-    if (parentPathIds == null || parentPathIds.length != level) {
-      throw Exception("Invalid parentPathIds for level $level");
-    }
-
-    DocumentReference currentRef =
-    _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
-
-    for (int i = 1; i < level; i++) {
-      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
-    }
-
-    final docRef = currentRef.collection('subsubject$level').doc(subjectId);
+    final docRef = getSubSubjectDocRef(
+      userId: userId,
+      level: level,
+      parentPathIds: parentPathIds!,
+      subjectId: subjectId,
+    );
 
     await docRef.collection('flashcards').doc(flashcardId).update({
       'front': newFront,
@@ -242,7 +251,7 @@ class FirestoreService {
     });
   }
 
-  /// 🔸 Supprimer une flashcard dans l’arborescence hiérarchique
+  /// 🔹 Supprime une flashcard et ses images
   Future<void> deleteFlashcardAtPath({
     required String userId,
     required String subjectId,
@@ -250,21 +259,14 @@ class FirestoreService {
     required List<String>? parentPathIds,
     required String flashcardId,
   }) async {
-    if (parentPathIds == null || parentPathIds.length != level) {
-      throw Exception("Invalid parentPathIds for level $level");
-    }
+    final docRef = getSubSubjectDocRef(
+      userId: userId,
+      level: level,
+      parentPathIds: parentPathIds!,
+      subjectId: subjectId,
+    );
 
-    DocumentReference currentRef =
-    _db.collection('users').doc(userId).collection('subjects').doc(parentPathIds[0]);
-
-    for (int i = 1; i < level; i++) {
-      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
-    }
-
-    final docRef = currentRef.collection('subsubject$level').doc(subjectId);
     final flashcardRef = docRef.collection('flashcards').doc(flashcardId);
-
-    // 🔍 On récupère les données de la carte avant de la supprimer
     final snapshot = await flashcardRef.get();
     final data = snapshot.data() as Map<String, dynamic>?;
 
@@ -272,14 +274,13 @@ class FirestoreService {
       final imageFrontUrl = data['imageFrontUrl'];
       final imageBackUrl = data['imageBackUrl'];
 
-      // 🧽 Supprimer les images de Firebase Storage si elles existent
       Future<void> deleteImage(String? imageUrl) async {
         if (imageUrl != null && imageUrl.toString().isNotEmpty) {
           try {
             final ref = FirebaseStorage.instance.refFromURL(imageUrl);
             await ref.delete();
           } catch (e) {
-            print("Erreur lors de la suppression de l’image : $e");
+            print("Erreur suppression image : $e");
           }
         }
       }
@@ -288,38 +289,17 @@ class FirestoreService {
       await deleteImage(imageBackUrl);
     }
 
-    // 🔥 Enfin, on supprime la carte dans Firestore
     await flashcardRef.delete();
   }
 
-
-// 🔄 Mise à jour d'une flashcard
-  Future<void> updateFlashcard(String userId, String subjectId, String flashcardId, String newFront, String newBack) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('subjects')
-        .doc(subjectId)
-        .collection('flashcards')
-        .doc(flashcardId)
-        .update({
-      'front': newFront,
-      'back': newBack,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-  }
-
-
-  /// 🔸 Upload une image et retourne son URL
+  /// 🔹 Upload une image et retourne son URL
   Future<String> uploadImageAndGetUrl(
       File image,
       String userId,
       String subjectId,
       List<String>? parentPathIds,
       ) async {
-    final fileName = const Uuid().v4(); // ou une autre méthode pour générer un nom unique
-
-    // Construit le chemin hiérarchique
+    final fileName = const Uuid().v4();
     final pathSegments = [
       'flashcards',
       userId,
@@ -329,30 +309,167 @@ class FirestoreService {
     ];
 
     final storageRef = FirebaseStorage.instance.ref().child(pathSegments.join('/'));
-
     await storageRef.putFile(image);
     return await storageRef.getDownloadURL();
+  }
 
+  Future<DocumentReference> _ensureLevelDocument({
+    required DocumentReference parentRef,
+    required String levelKey,
+    required String docId,
+  }) async {
+    final docRef = parentRef.collection(levelKey).doc(docId);
+    await docRef.set({'createdAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+    return docRef;
   }
 
 
-  DocumentReference buildFlashcardDocRef({
+  // 🌀 Révision - Quizz
+  /// 🔹 Met à jour un document unique par jour et par thème pour suivre toutes les réponses
+  Future<void> recordAnswerForDayAndTheme({
     required String userId,
+    required String flashcardId,
+    required bool isCorrect,
+    required int durationSeconds,
     required String subjectId,
     required int level,
     required List<String> parentPathIds,
-  }) {
+  }) async {
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    // Point de départ : document date
     DocumentReference currentRef = _db
         .collection('users')
         .doc(userId)
-        .collection('subjects')
-        .doc(parentPathIds[0]);
+        .collection('revision_stats')
+        .doc(today);
 
-    for (int i = 1; i < level; i++) {
-      currentRef = currentRef.collection('subsubject$i').doc(parentPathIds[i]);
+    await currentRef.set({
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    // Traverse la hiérarchie pour arriver au thème ciblé
+    for (int i = 0; i < level; i++) {
+      currentRef = await _ensureLevelDocument(
+        parentRef: currentRef,
+        levelKey: 'level_$i',
+        docId: parentPathIds[i],
+      );
     }
 
-    return currentRef.collection('subsubject$level').doc(subjectId);
+
+
+// Dernier niveau : sujet
+    final subjectRef = currentRef.collection('level_$level').doc(subjectId);
+    await subjectRef.set({'createdAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+
+    await subjectRef.set({'createdAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+
+
+// Référence vers answers/{flashcardId}
+    final answerRef = subjectRef
+        .collection('answers')
+        .doc(flashcardId);
+
+// Référence vers meta/revision_summary
+    final summaryRef = subjectRef
+        .collection('meta')
+        .doc('revision_summary');
+
+// 🔁 Enregistrement de la réponse
+    await answerRef.set({
+      'flashcardId': flashcardId,
+      'subjectId': subjectId,
+      'level': level,
+      'parentPathIds': parentPathIds,
+      'lastIsCorrect': isCorrect,
+      'lastTimestamp': FieldValue.serverTimestamp(),
+      'correctCount': FieldValue.increment(isCorrect ? 1 : 0),
+      'wrongCount': FieldValue.increment(isCorrect ? 0 : 1),
+      'totalDuration': FieldValue.increment(durationSeconds),
+    }, SetOptions(merge: true));
+
+// 📦 Mise à jour du résumé journalier
+    await summaryRef.set({
+      'correctTotal': FieldValue.increment(isCorrect ? 1 : 0),
+      'wrongTotal': FieldValue.increment(isCorrect ? 0 : 1),
+      'revisionCount': FieldValue.increment(1),
+      'totalDuration': FieldValue.increment(durationSeconds),
+      'lastUpdated': FieldValue.serverTimestamp(),
+      'flashcardsSeen': FieldValue.arrayUnion([flashcardId]),
+    }, SetOptions(merge: true));
+
   }
+
+  Future<Map<String, dynamic>> getTodayGlobalSummary(String userId) async {
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    print('📆 Date du jour : $today');
+    final statsRef = _db.collection('users').doc(userId).collection('revision_stats').doc(today);
+
+    int totalCorrect = 0;
+    int totalWrong = 0;
+    int revisionCount = 0;
+    int flashcardsSeen = 0;
+
+    Future<void> exploreLevels(DocumentReference ref, int level) async {
+      final levelKey = 'level_$level';
+      final levelDocs = await ref.collection(levelKey).get();
+      print('🔎 Lecture de ${levelDocs.docs.length} sujets à $levelKey');
+
+
+      for (var doc in levelDocs.docs) {
+        // 📥 Lire d'abord meta/revision_summary
+        print('📂 Sujet ID = ${doc.id}');
+        final metaRef = doc.reference.collection('meta').doc('revision_summary');
+        final metaSnap = await metaRef.get();
+        if (metaSnap.exists) {
+          final data = metaSnap.data()!;
+          print('📊 Found revision_summary for ${doc.id}: $data');
+          totalCorrect += (data['correctTotal'] ?? 0) as int;
+          totalWrong += (data['wrongTotal'] ?? 0) as int;
+          revisionCount += (data['revisionCount'] ?? 0) as int;
+          flashcardsSeen += (data['flashcardsSeen'] as List?)?.length ?? 0;
+        }
+
+        // 🔁 Ensuite : explorer récursivement
+        print('✅ Document trouvé pour le jour : $today. Exploration...');
+        await exploreLevels(doc.reference, level + 1);
+        print('✅ Résumé final : correct=$totalCorrect, wrong=$totalWrong, seen=$flashcardsSeen');
+      }
+    }
+
+
+
+    final exists = await statsRef.get();
+    print('✅ Le document existe-t-il ? ${exists.exists}');
+    if (!exists.exists) {
+      return {
+        'correctTotal': 0,
+        'wrongTotal': 0,
+        'revisionCount': 0,
+        'successRate': 0,
+        'flashcardsSeen': 0,
+      };
+    }
+
+    final level0Docs = await statsRef.collection('level_0').get();
+    print('📁 Nombre de documents dans level_0 : ${level0Docs.docs.length}');
+    for (var doc in level0Docs.docs) {
+      print('📄 ID du doc level_0 : ${doc.id}');
+    }
+
+    await exploreLevels(statsRef, 0);
+
+    return {
+      'correctTotal': totalCorrect,
+      'wrongTotal': totalWrong,
+      'revisionCount': revisionCount,
+      'flashcardsSeen': flashcardsSeen,
+      'successRate': revisionCount == 0
+          ? 0
+          : ((totalCorrect / (totalCorrect + totalWrong)) * 100).round(),
+    };
+  }
+
 
 }

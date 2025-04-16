@@ -65,7 +65,19 @@
   "learning_objectives": "Objectifs d’apprentissage",
   "change_language": "Changer la langue",
 
-  "profile_progression": "Progression"
+  "profile_progression": "Progression",
+
+  "flashcards_reviewed": "Flashcards révisées",
+  "seen": "Vues",
+  "never_seen": "Jamais vues",
+  "total_revisions": "Nombre de révisions",
+  "global_success_rate": "Taux de réussite global",
+  "success_by_subject": "Taux par matière",
+  "avg_time": "Temps moyen",
+  "time_per_quizz": "Temps par quizz",
+  "revision_rates": "Taux de révision",
+  "achievements": "Statistiques",
+    "statistics": "Statistiques"
 
 
 

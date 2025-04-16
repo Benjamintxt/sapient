@@ -4,6 +4,7 @@ import 'package:sapient/services/app_state.dart';
 import 'package:sapient/services/firestore_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sapient/app/pages/statistics_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -142,10 +143,12 @@ class _ProfilePageState extends State<ProfilePage> {
               heroTag: "progress_button",
               backgroundColor: Colors.deepPurple,
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("🚧 Statistiques à venir !")),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const StatisticsPage()),
                 );
               },
+
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: const Icon(Icons.bar_chart, color: Colors.white),
             ),
