@@ -114,7 +114,7 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
         parentPathIds: widget.parentPathIds,
       );
 
-      final docRef = FirestoreService().getSubSubjectDocRef(
+      final docRef = await FirestoreService().getSubSubjectDocRef(
         userId: widget.userId,
         subjectId: widget.subjectId,
         level: widget.level,

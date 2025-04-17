@@ -98,81 +98,94 @@ class _FlashcardPageState extends State<FlashcardPage> {
             children: [
               const SizedBox(height: kToolbarHeight + 50),
               Expanded(
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: _firestoreService.getFlashcardsAtPath(
+                child: FutureBuilder<Stream<QuerySnapshot>>(
+                  future: _firestoreService.getFlashcardsAtPath(
                     userId: widget.userId,
                     subjectId: widget.subjectId,
                     level: widget.level,
                     parentPathIds: widget.parentPathIds,
                   ),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                  builder: (context, futureSnapshot) {
+                    if (futureSnapshot.connectionState != ConnectionState.done) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+
+                    if (futureSnapshot.hasError || !futureSnapshot.hasData) {
                       return Center(child: Text(AppLocalizations.of(context)!.no_flashcards_found));
                     }
 
-                    return ListView.separated(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      itemCount: snapshot.data!.docs.length,
-                      itemBuilder: (context, index) {
-                        var doc = snapshot.data!.docs[index];
-                        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+                    return StreamBuilder<QuerySnapshot>(
+                      stream: futureSnapshot.data!,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
 
-                        return GestureDetector(
-                          onLongPress: () => _showDeleteDialog(context, doc.id, data['front']),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.9),
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 4),
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return Center(child: Text(AppLocalizations.of(context)!.no_flashcards_found));
+                        }
+
+                        return ListView.separated(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (context, index) {
+                            var doc = snapshot.data!.docs[index];
+                            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+                            return GestureDetector(
+                              onLongPress: () => _showDeleteDialog(context, doc.id, data['front']),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.9),
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                                title: Text(
-                                  data['front'],
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF4A148C),
-                                  ),
-                                ),
-                                trailing: const Icon(Icons.chevron_right, color: Color(0xFF4A148C)),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => FlashcardViewPage(
-                                        front: data['front'],
-                                        back: data['back'],
-                                        flashcardId: doc.id,
-                                        subjectId: widget.subjectId,
-                                        userId: widget.userId,
-                                        level: widget.level,
-                                        parentPathIds: widget.parentPathIds,
-                                        imageFrontUrl: data['imageFrontUrl'],
-                                        imageBackUrl: data['imageBackUrl'],
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                    title: Text(
+                                      data['front'],
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF4A148C),
                                       ),
                                     ),
-                                  );
-                                },
+                                    trailing: const Icon(Icons.chevron_right, color: Color(0xFF4A148C)),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => FlashcardViewPage(
+                                            front: data['front'],
+                                            back: data['back'],
+                                            flashcardId: doc.id,
+                                            subjectId: widget.subjectId,
+                                            userId: widget.userId,
+                                            level: widget.level,
+                                            parentPathIds: widget.parentPathIds,
+                                            imageFrontUrl: data['imageFrontUrl'],
+                                            imageBackUrl: data['imageBackUrl'],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
+                          separatorBuilder: (context, index) => const SizedBox(height: 12),
                         );
-
                       },
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
                     );
                   },
                 ),
@@ -214,7 +227,8 @@ class _FlashcardPageState extends State<FlashcardPage> {
                 ),
               ),
             ],
-          ),
+          )
+
         ],
       ),
     );
