@@ -1,18 +1,26 @@
-import 'package:flutter/material.dart';
-import 'edit_flashcard_page.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+// 📄 flashcard_view_page.dart
+// 👁️ Page de visualisation d’une flashcard (texte ou image), avec possibilité de la retourner et de l’éditer
+
+import 'package:flutter/material.dart'; // 🎨 UI Flutter
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 🌐 Traductions
+import 'package:sapient/app/pages/flashcards/edit/edit_flashcard_page.dart'; // ✏️ Page d’édition
+
+// 🔧 Logs de debug activables
+const bool kEnableFlashcardViewLogs = true;
+void logFlashcardView(String msg) {
+  if (kEnableFlashcardViewLogs) print('[FlashcardView] $msg');
+}
 
 class FlashcardViewPage extends StatefulWidget {
-  final String front;
-  final String back;
-  final String flashcardId;
-  final String subjectId;
-  final String userId;
-  final int level;
-  final List<String>? parentPathIds;
-
-  final String? imageFrontUrl;
-  final String? imageBackUrl;
+  final String front; // 🔹 Texte du recto
+  final String back; // 🔹 Texte du verso
+  final String flashcardId; // 🆔 ID de la carte
+  final String subjectId; // 📁 ID du sujet
+  final String userId; // 👤 ID utilisateur
+  final int level; // 🔢 Niveau hiérarchique
+  final List<String>? parentPathIds; // 🧭 Chemin hiérarchique
+  final String? imageFrontUrl; // 📸 Image du recto
+  final String? imageBackUrl; // 📸 Image du verso
 
   const FlashcardViewPage({
     super.key,
@@ -32,9 +40,10 @@ class FlashcardViewPage extends StatefulWidget {
 }
 
 class _FlashcardViewPageState extends State<FlashcardViewPage> {
-  bool showFront = true;
+  bool showFront = true; // 🔁 Recto ou verso
 
   void _flipCard() {
+    logFlashcardView("🔁 Carte retournée");
     setState(() {
       showFront = !showFront;
     });
@@ -42,12 +51,14 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // 🌸 Fond
+          // 🌸 Fond d’écran
           Positioned.fill(
             child: Image.asset(
               'assets/images/FlashCard View.png',
@@ -55,7 +66,7 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
             ),
           ),
           Positioned.fill(
-            child: Container(color: Colors.white.withOpacity(0.1)),
+            child: Container(color: Colors.white.withAlpha(25)),
           ),
 
           // 🔙 Flèche retour
@@ -64,7 +75,10 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
             left: 16,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Color(0xFF4A148C), size: 28),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                logFlashcardView("🔙 Retour");
+                Navigator.pop(context);
+              },
             ),
           ),
 
@@ -75,7 +89,7 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
             right: 0,
             child: Center(
               child: Text(
-                AppLocalizations.of(context)!.flashcard,
+                local.flashcard,
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -93,10 +107,11 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
             ),
           ),
 
-          // 🧠 Contenu principal
+          // 🧠 Contenu principal : carte + bouton
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // 🔁 Carte à retourner
               GestureDetector(
                 onTap: _flipCard,
                 child: AnimatedContainer(
@@ -114,7 +129,7 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withAlpha(25),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -122,6 +137,9 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                   ),
                   child: () {
                     final imageUrl = showFront ? widget.imageFrontUrl : widget.imageBackUrl;
+                    final side = showFront ? 'front' : 'back';
+                    logFlashcardView("👁️ Affichage du côté $side");
+
                     if (imageUrl != null && imageUrl.isNotEmpty) {
                       return ClipRRect(
                         borderRadius: BorderRadius.circular(12),
@@ -144,10 +162,12 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                 ),
               ),
               const SizedBox(height: 40),
+              // ✏️ Bouton édition
               Center(
                 child: FloatingActionButton(
                   heroTag: 'edit',
                   onPressed: () {
+                    logFlashcardView("✏️ Édition de la carte");
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -176,5 +196,4 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
       ),
     );
   }
-
 }

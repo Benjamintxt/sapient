@@ -29,14 +29,16 @@
   "no_flashcards_found": "Aucune flashcard trouvée",
   "delete_flashcard": "Supprimer la flashcard ?",
   "flashcards": "Flashcards",
-  "delete_subject_message": "Souhaitez-vous vraiment supprimer \"$subject\" ?",
+    "delete_subject_message": "Souhaitez-vous vraiment supprimer \"{subject}\" ?",
     "@delete_subject_message": {
       "placeholders": {
         "subject": {
-          "type": "Object"
+          "type": "String",
+          "example": "Mathématiques"
         }
       }
     },
+
   "delete_subject": "Supprimer le sujet",
   "cancel": "Annuler",
   "profile": "Profil",
@@ -77,8 +79,15 @@
   "time_per_quizz": "Temps par quizz",
   "revision_rates": "Taux de révision",
   "achievements": "Statistiques",
-    "statistics": "Statistiques"
+  "statistics": "Statistiques",
 
+  "no_subjects": "Aucun sujet pour l’instant",
+
+  "error_generic": "Une erreur est survenue",
+
+  "enter_new_value": "Entrez la nouvelle valeur",
+  "saveButton": "Sauvegarder",
+  "error_loading_stats": "Erreur lors du chargement des statistiques"
 
 
 }
