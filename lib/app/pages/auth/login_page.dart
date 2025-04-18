@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
           // 🌫️ Couleur par-dessus l’image (effet doux)
           Positioned.fill(
             child: Container(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withAlpha(51),
             ),
           ),
 
@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: InputDecoration(
                       hintText: "Email",
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.9),
+                      fillColor: Colors.white.withAlpha(229),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -69,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: InputDecoration(
                       hintText: "Mot de passe",
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.9),
+                      fillColor: Colors.white..withAlpha(229),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -85,11 +85,11 @@ class _LoginPageState extends State<LoginPage> {
                       // 🔓 Se connecter
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.deepPurple.withOpacity(0.9),
+                          color: Colors.deepPurple..withAlpha(229),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black..withAlpha(51),
                               blurRadius: 6,
                               offset: const Offset(0, 3),
                             ),
@@ -116,11 +116,11 @@ class _LoginPageState extends State<LoginPage> {
                       // 🔑 Mot de passe oublié
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.deepPurple.withOpacity(0.9),
+                          color: Colors.deepPurple..withAlpha(229),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black..withAlpha(51),
                               blurRadius: 6,
                               offset: const Offset(0, 3),
                             ),
@@ -150,11 +150,11 @@ class _LoginPageState extends State<LoginPage> {
                       // ➕ Créer un compte
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.deepPurple.withOpacity(0.9),
+                          color: Colors.deepPurple..withAlpha(229),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black..withAlpha(51),
                               blurRadius: 6,
                               offset: const Offset(0, 3),
                             ),
