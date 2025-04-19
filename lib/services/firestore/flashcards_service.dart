@@ -150,12 +150,14 @@ class FirestoreFlashcardsService {
   }) async {
     logFlashcards("🚮 [deleteFlashcard] DÉBUT → subject=$subjectId | level=$level | flashcardId=$flashcardId");
 
-    // ✅ Corrige les éventuelles répétitions de subjectId dans parentPathIds
+// ✅ Corrige les éventuelles répétitions de subjectId dans parentPathIds
     final correctedPath = [...parentPathIds]; // 🧬 Copie sécurisée
-    if (correctedPath.isNotEmpty && correctedPath.last == subjectId) {
+    if (correctedPath.isNotEmpty && correctedPath.last == subjectId && level == correctedPath.length) {
       correctedPath.removeLast(); // ❌ Supprime la duplication si elle existe
+      level = correctedPath.length; // ✅ Corrige aussi le niveau
       logFlashcards("⚠️ [deleteFlashcard] Correction du chemin : suppression du dernier ID dupliqué");
     }
+
 
     // 🔗 Récupère la référence du document sujet contenant la flashcard
     final docRef = await _nav.getSubSubjectDocRef(

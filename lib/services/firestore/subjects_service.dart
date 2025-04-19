@@ -264,4 +264,20 @@ class FirestoreSubjectsService {
     return names;
   }
 
+  /// 🔹 Récupère les sujets racine (niveau 0) en une seule fois (QuerySnapshot)
+  Future<QuerySnapshot> getRootSubjectsOnce() async {
+    final String? userId = FirestoreCore.getCurrentUserUid();
+
+    if (userId == null) {
+      logSubjects("❌ [getRootSubjectsOnce] Utilisateur non connecté");
+      throw Exception("User not authenticated.");
+    }
+
+    final ref = _db.collection('users').doc(userId).collection('subjects');
+    logSubjects("📥 Lecture des sujets racine : ${ref.path}");
+
+    return await ref.orderBy('createdAt', descending: false).get();
+  }
+
+
 }

@@ -7,8 +7,9 @@ import 'package:sapient/app/pages/user/statistics/widgets/stat_card.dart'; // �
 import 'package:sapient/app/pages/user/statistics/widgets/pie_stat_card.dart'; // 🥧 Statistiques circulaires
 import 'package:sapient/app/pages/user/statistics/widgets/bar_stat_card.dart'; // 📊 Barres comparatives
 import 'package:sapient/app/pages/user/statistics/widgets/mini_stat_card.dart'; // 📦 Mini-carte (temps, etc.)
-import 'package:sapient/app/pages/user/statistics/widgets/revision_rate_card.dart'; // 📈 Révisions par matière
 import 'package:sapient/app/pages/user/statistics/controller/statistics_controller.dart'; // 🧠 Récupération des données
+
+
 
 // 🔧 Constante pour activer/désactiver les logs
 const bool kEnableStatisticsLogs = true;
@@ -49,8 +50,11 @@ class StatisticsPage extends StatelessWidget {
         ),
       ),
 
-      body: FutureBuilder<Map<String, dynamic>>( // 🔄 Attend les données Firestore
-        future: StatisticsController.getTodaySummary(uid), // 📡 Statistiques du jour
+      body: FutureBuilder<List<dynamic>>( // 🔁 Double future// 🔄 Attend les données Firestore
+        future: Future.wait([
+          StatisticsController.getTodaySummary(uid), // 📦 Données globales
+          StatisticsController.getRevisionRateByRootSubject(uid), // 📈 Taux par matière
+        ]), // 📡 Statistiques du jour
         builder: (context, snapshot) {
           logStats('📦 snapshot.connectionState = ${snapshot.connectionState}');
           logStats('📦 snapshot.hasData = ${snapshot.hasData}');
@@ -64,12 +68,18 @@ class StatisticsPage extends StatelessWidget {
             return Center(child: Text(local.error_loading_stats));
           }
 
-          final data = snapshot.data!; // 📦 Données récupérées
+          final data = snapshot.data![0] as Map<String, dynamic>; // 📦 Stats globales
+          final ratesBySubject = snapshot.data![1] as Map<String, double>; // 📈 Taux par sujet
+
+          final avgTimePerRevision = data['avgTimePerRevision'] ?? 0; // ⏱ Temps moyen par révision
+          final avgTimePerFlashcard = data['avgTimePerFlashcard'] ?? 0; // ⏱ Temps moyen par flashcard
+
+
           final seen = data['flashcardsSeen'] ?? 0; // 👁️ Nombre de cartes vues
           final total = data['flashcardsTotal'] ?? 0; // 📦 Nombre total de flashcards
-          final notSeen = (total - seen).clamp(0, total); // 🔴 Jamais vues (protège contre négatif)
           final revisions = data['revisionCount'] ?? 0; // 🔁 Nombre de révisions
           final successRate = data['successRate'] ?? 0; // ✅ Pourcentage de succès
+
 
 
           logStats('👀 flashcardsSeen = $seen');
@@ -97,11 +107,9 @@ class StatisticsPage extends StatelessWidget {
                         children: [
                           Expanded(
                             child: StatCard(
-                              title: local.flashcards_reviewed, // 🏷️ Titre
-                              leftValue: seen.toString(), // 🔢 Valeur gauche
-                              leftLabel: local.seen, // 🟢 Libellé gauche
-                              rightValue: notSeen.toString(), // // ❓ Valeur non vue (placeholder) ✅ Maintenant dynamique
-                              rightLabel: local.never_seen, // 🔴 Libellé droite
+                              title: local.flashcards_reviewed, // 🏷️ Titre de la carte
+                              seen: seen,                       // 👁️ Flashcards vues
+                              total: total,                    // 🧮 Total des flashcards
                             ),
                           ),
                           const SizedBox(width: 12), // ➖ Espace entre les deux
@@ -117,40 +125,33 @@ class StatisticsPage extends StatelessWidget {
 
                       const SizedBox(height: 12), // ↕️ Espace
                       BarStatCard(
-                        title: local.success_by_subject, // 🏷️ Titre
-                        bars: [30, 50, 70, 90], // 📊 Hauteurs des barres
-                        labels: ['Math', 'Hist', 'Angl', 'Bio'], // 🏷️ Labels associés
+                        title: local.success_by_subject,
+                        bars: ratesBySubject.values.map((v) => (v * 100).round()).toList(),
+                        labels: ratesBySubject.keys.toList(),
                       ),
+
 
                       const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
                             child: MiniStatCard(
-                              title: local.avg_time, // ⏱️ Temps moyen
-                              value: '20 min',
+                              title: local.avg_time,          // 🏷️ "Temps moyen"
+                              value: "$avgTimePerRevision sec", // ⏱️ Durée à afficher
+                              icon: Icons.timer_outlined,       // 🕒 Icône horloge
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: MiniStatCard(
-                              title: local.time_per_quizz, // 🧮 Temps par quiz
-                              value: '1 min 12 s',
+                              title: local.time_per_quizz,    // 🏷️ "Temps par quizz"
+                              value: "$avgTimePerFlashcard sec",         // ⏱️ Durée à afficher
+                              icon: Icons.hourglass_bottom,   // ⌛ Icône sablier
                             ),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 12),
-                      RevisionRateCard(
-                        title: local.revision_rates, // 🔢 Taux de révision
-                        subjects: {
-                          'Math': 0.8, // 📈 80%
-                          'Histoire': 0.6, // 📈 60%
-                          'Anglais': 0.5, // 📈 50%
-                          'SVT': 0.4, // 📈 40%
-                        },
-                      ),
                     ],
                   ),
                 ),

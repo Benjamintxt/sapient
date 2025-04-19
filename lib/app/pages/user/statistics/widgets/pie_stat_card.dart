@@ -1,63 +1,72 @@
-// 🥎 pie_stat_card.dart
-// 🥧 Carte circulaire des révisions avec pourcentage de réussite
+// 🧮 pie_stat_card.dart
+// 📊 Carte avec barre horizontale pour "Nombre de révisions"
 
-import 'package:flutter/material.dart'; // 💡 UI de base
-import 'package:flutter/foundation.dart'; // 🔧 debugPrint
-import 'base_stat_card.dart'; // 🛋 Carte de base stylisée
+import 'package:flutter/material.dart'; // 🎨 Widgets UI de base
+import 'package:flutter/foundation.dart'; // 🧰 debugPrint
+import 'base_stat_card.dart'; // 🧱 Carte de base stylisée
 
 // 🔧 Activation des logs
 const bool kEnablePieStatCardLogs = true;
 
-/// 🔍 Logger central pour PieStatCard
+/// 🧾 Logger pour la carte PieStatCard (barre horizontale)
 void logPieStatCard(String message) {
-  if (kEnablePieStatCardLogs) debugPrint('[🥧 PieStatCard] \$message');
+  if (kEnablePieStatCardLogs) debugPrint('[🥧 PieStatCard] $message');
 }
 
 class PieStatCard extends StatelessWidget {
-  final String title; // 🏛þ Titre de la carte
-  final String value; // 🔢 Valeur principale (ex: "12")
-  final int percentage; // 🔄 Pourcentage de réussite (ex: 80)
+  final String title; // 🏷️ Titre de la carte
+  final String value; // 🔢 Valeur numérique (ex: "7")
+  final int percentage; // 📈 Taux de réussite ou remplissage (ex: 57)
 
   const PieStatCard({
-    super.key, // 🔑 Identifiant du widget
-    required this.title, // 🏛þ
-    required this.value, // 🔢
-    required this.percentage, // 🔄
+    super.key,
+    required this.title,
+    required this.value,
+    required this.percentage,
   });
 
   @override
   Widget build(BuildContext context) {
-    logPieStatCard('Construction : \$title - \$value - \$percentage%'); // 📈 Log
+    logPieStatCard('🧱 Construction de la carte "$title"');
+    logPieStatCard('🔢 Valeur = $value | % = $percentage%');
 
-    return BaseStatCard( // 🛋 Carte réutilisable avec titre
-      title: title, // 🏛þ
-      child: Row( // ↔️ Ligne de contenu
+    return BaseStatCard( // 🧱 Utilise la base commune avec fond et ombre
+      title: title, // 🏷️ Titre en haut
+      child: Column( // 🧊 Colonne verticale
+        mainAxisAlignment: MainAxisAlignment.center, // 📍 Centrage vertical
+        crossAxisAlignment: CrossAxisAlignment.center, // 📍 Centrage horizontal
         children: [
-          Text(value, style: _numberStyle), // 🔢 Affiche la valeur numérique
-          const SizedBox(width: 16), // ↔️ Espace entre les éléments
-          Stack( // 🌀 Empile l'indicateur et le texte
-            alignment: Alignment.center, // 🌌 Centre les éléments
-            children: [
-              SizedBox( // 🎨 Zone de l'indicateur
-                width: 60, // 📏 Taille fixe
-                height: 60, // 📏
-                child: CircularProgressIndicator( // 🔄 Cercle de progression
-                  value: percentage / 100, // 📊 Valeur de 0.0 à 1.0
-                  color: Colors.green, // 🌿 Couleur verte
-                  strokeWidth: 6, // 🛏 Largeur du trait
-                ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // 📐 Marge interne
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16), // 🟦 Coins arrondis pour la barre
+              child: LinearProgressIndicator( // 📊 Barre horizontale
+                value: percentage / 100, // 📏 Valeur entre 0.0 et 1.0
+                minHeight: 20, // 📏 Hauteur personnalisée
+                backgroundColor: Colors.grey.shade300, // 🎨 Fond gris clair
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.teal), // 🌿 Couleur de progression
               ),
-              Text("$percentage%"), // 🔄 Texte du pourcentage centré
-            ],
+            ),
+          ),
+          const SizedBox(height: 12), // ↕️ Espace
+          Text(
+            value, // 🔢 Affichage du chiffre
+            style: const TextStyle(
+              fontSize: 28, // 📏 Grosse taille
+              fontWeight: FontWeight.bold, // 💪 En gras
+              color: Colors.deepPurple, // 🎨 Violet foncé
+            ),
+          ),
+          const SizedBox(height: 4), // ↕️ Petit espace
+          const Text(
+            "Révisions", // 📋 Légende
+            style: TextStyle(
+              fontSize: 16, // 📏 Taille normale
+              color: Colors.black87, // 🎨 Texte presque noir
+            ),
           ),
         ],
       ),
     );
   }
 }
-
-// 🎨 Style commun aux valeurs numériques
-const TextStyle _numberStyle = TextStyle(
-  fontSize: 24, // 📏 Taille de police
-  fontWeight: FontWeight.bold, // 💪 Gras
-);

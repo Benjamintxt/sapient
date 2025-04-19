@@ -41,7 +41,7 @@ class ReviewFlashcardCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         logFlashcard("🔁 [ReviewFlashcardCard] Tap détecté → on retourne la carte");
-        onTap; // 👆 Permet le retournement de la carte
+        onTap(); // ✅ Appelle effectivement la fonction
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300), // ⏱️ Animation de transition

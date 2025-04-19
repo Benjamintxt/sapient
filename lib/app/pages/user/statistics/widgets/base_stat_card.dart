@@ -5,55 +5,64 @@ import 'package:flutter/material.dart'; // 👥 Composants de base Flutter
 import 'package:flutter/foundation.dart'; // 🧠 Pour debugPrint
 
 // 🔧 Constante de contrôle des logs
-const bool kEnableBaseStatCardLogs = true; // 📢 Active ou non les logs de debug
+const bool kEnableBaseStatCardLogs = true;
 
-/// 🖊️ Fonction centrale de log de la carte de base
+/// 🖊️ Fonction de log conditionnelle
 void logBaseStatCard(String message) {
   if (kEnableBaseStatCardLogs) debugPrint('[🔹 BaseStatCard] $message');
 }
 
-/// 🧱 Widget de base pour contenir n'importe quelle carte stat
+/// 🧱 Widget de base pour contenir une carte stat
 class BaseStatCard extends StatelessWidget {
-  final String title; // 🎫 Titre affiché en haut de la carte
-  final Widget child; // 🔹 Contenu dynamique de la carte
+  final String title; // 🎫 Titre de la carte
+  final Widget child; // 🧱 Contenu principal
 
   const BaseStatCard({
-    super.key, // 🔐 Clé du widget
-    required this.title, // 🎫 Titre requis
-    required this.child, // 🔹 Contenu interne
+    super.key,
+    required this.title,
+    required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    logBaseStatCard('🧱 Construction de la carte "$title"'); // 🖊️ Log de construction
+    logBaseStatCard('🧱 Construction de la carte "$title"');
 
-    return Container( // 📦 Boîte principale de la carte
-      margin: const EdgeInsets.only(bottom: 12), // 🛏️ Espace sous la carte
-      padding: const EdgeInsets.all(16), // 🛠️ Marges intérieures
-      decoration: BoxDecoration( // 👗 Style de fond de la carte
-        color: Colors.white.withAlpha(229), // 🌟 Blanc semi-transparent
-        borderRadius: BorderRadius.circular(20), // ⭕ Bords arrondis
-        boxShadow: [ // 💨 Ombre douce sous la carte
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16), // ➕ Plus d’espace entre les cartes
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6), // ↕️ Réduction du padding vertical
+
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(235), // 🌿 Légèrement plus opaque
+        borderRadius: BorderRadius.circular(24), // ⭕ Coins plus doux
+        boxShadow: [
           BoxShadow(
-            blurRadius: 6, // 🔫 Intensité du flou
-            color: Colors.black26, // 💥 Couleur de l’ombre
-            offset: const Offset(0, 3), // 🔄 Décalage vertical
+            color: Colors.black12, // 🌫️ Ombre plus douce
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column( // 📃 Contenu vertical
-        crossAxisAlignment: CrossAxisAlignment.start, // ← Aligné à gauche
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // 🔧 Réduit la hauteur à ce qui est nécessaire
+        crossAxisAlignment: CrossAxisAlignment.center, // 🧲 Centre horizontalement le contenu
         children: [
-          Text( // 🎫 Titre
-            title, // 🌐 Texte du titre
-            style: const TextStyle( // 🎨 Style du titre
-              fontWeight: FontWeight.bold, // 🔝 Gras
+          if (title.isNotEmpty) // 🔕 Affiche uniquement si titre présent
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12), // 🧘‍♀️ Espace entre le titre et le contenu
+              child: Text(
+                title,
+                textAlign: TextAlign.center, // 🧭 Centrage texte
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.black87,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 12), // 🛏️ Espace vertical
-          child, // 🔹 Widget contenu (ligne, graphique, texte...)
+          child, // 🧱 Contenu (MiniStatCard, etc.)
         ],
       ),
+
     );
   }
 }

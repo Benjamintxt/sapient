@@ -1,63 +1,69 @@
 // 📄 stat_card.dart
-// 🔹 Carte statistique avec deux valeurs : vue et non vue
+// 🔹 Carte statistique circulaire pour les flashcards vues
 
-import 'package:flutter/material.dart'; // 🧱 Composants UI de base
-import 'package:sapient/app/pages/user/statistics/widgets/base_stat_card.dart'; // 🧱 Carte de base stylée
+import 'package:flutter/material.dart'; // 🧱 UI Flutter de base
+import 'package:sapient/app/pages/user/statistics/widgets/base_stat_card.dart'; // 📦 Carte de base stylisée
 import 'package:flutter/foundation.dart'; // 🪛 Pour debugPrint
 
-// 🛠️ Constante pour activer/désactiver les logs de StatCard
+// 🔧 Constante pour activer/désactiver les logs
 const bool kEnableStatCardLogs = true;
 
-/// 🖨️ Fonction de log pour StatCard (si activée)
+/// 🖨️ Logger dédié pour StatCard
 void logStatCard(String message) {
   if (kEnableStatCardLogs) debugPrint('[📊 StatCard] $message');
 }
 
 class StatCard extends StatelessWidget {
   final String title; // 🏷️ Titre de la carte
-  final String leftValue; // 🔢 Valeur à gauche (ex: "10")
-  final String leftLabel; // 📌 Libellé à gauche (ex: "Vues")
-  final String rightValue; // 🔢 Valeur à droite (ex: "5")
-  final String rightLabel; // 📌 Libellé à droite (ex: "Jamais vues")
+  final int seen; // 👁️ Nombre de flashcards vues
+  final int total; // 📦 Nombre total de flashcards
 
   const StatCard({
-    super.key, // 🔑 Clé pour l’identification du widget
-    required this.title, // 🏷️ Titre
-    required this.leftValue, // 🔢 Valeur gauche
-    required this.leftLabel, // 📌 Label gauche
-    required this.rightValue, // 🔢 Valeur droite
-    required this.rightLabel, // 📌 Label droite
+    super.key,
+    required this.title,
+    required this.seen,
+    required this.total,
   });
 
   @override
   Widget build(BuildContext context) {
-    logStatCard('🧱 Construction StatCard : $title'); // 🖨️ Log construction
+    final percentage = total == 0 ? 0 : ((seen / total) * 100).round(); // 🔢 Pourcentage vu
+    logStatCard('🧱 Construction StatCard : $title → $seen vues / $total → $percentage%');
 
-    return BaseStatCard( // 🧱 Structure réutilisable commune
-      title: title, // 🏷️ Titre affiché en haut
-      child: Row( // ↔️ Ligne principale de contenu
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly, // ↔️ Répartition uniforme
+    return BaseStatCard(
+      title: title, // 🏷️ Titre de la carte (ex: "Flashcards révisées")
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center, // ↕️ Centre tout verticalement
+        crossAxisAlignment: CrossAxisAlignment.center, // ↔️ Centre tout horizontalement
         children: [
-          Column( // 📊 Colonne gauche
-            children: [
-              Text(leftValue, style: _numberStyle), // 🔢 Valeur à gauche
-              Text(leftLabel), // 📌 Label de la valeur gauche
-            ],
+          // 🧱 Bloc de hauteur fixe pour bien centrer le contenu
+          SizedBox(
+            height: 100,
+            child: Center( // 📍 Centre dans la hauteur du bloc
+              child: Stack(
+                alignment: Alignment.center, // 🌀 Centre valeur et indicateur
+                children: [
+                  SizedBox(
+                    width: 70, height: 70, // 📏 Taille du cercle
+                    child: CircularProgressIndicator(
+                      value: total == 0 ? 0.0 : seen / total, // 🎯 Progrès réel
+                      color: Colors.teal, // 🌿 Couleur principale
+                      strokeWidth: 6, // 🖌️ Épaisseur trait
+                      backgroundColor: Colors.grey.shade300, // 🎨 Couleur fond
+                    ),
+                  ),
+                  Text(
+                    "$seen", // 🔢 Valeur affichée au centre
+                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
           ),
-          Column( // 📊 Colonne droite
-            children: [
-              Text(rightValue, style: _numberStyle), // 🔢 Valeur à droite
-              Text(rightLabel), // 📌 Label de la valeur droite
-            ],
-          ),
+          const SizedBox(height: 4), // ↕️ Espace entre le cercle et le label
+          const Text('Vues', style: TextStyle(fontSize: 14)), // 🏷️ Libellé bas
         ],
       ),
     );
   }
 }
-
-// 🎨 Style numérique commun pour les statistiques
-const TextStyle _numberStyle = TextStyle(
-  fontSize: 24, // 🔠 Taille de police
-  fontWeight: FontWeight.bold, // 🅱️ En gras
-);

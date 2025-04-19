@@ -152,87 +152,113 @@ class FirestoreRevisionsService {
   }
 
   /// 🔹 Calcule les statistiques globales de la journée (correct, erreurs, pourcentage, flashcards vues...)
+  /// 🔹 Calcule les statistiques globales de la journée (correct, erreurs, pourcentage, flashcards vues...)
+  ///    et ajoute les nouvelles métriques : temps moyen par révision et par flashcard
   Future<Map<String, dynamic>> getTodayGlobalSummary(String userId) async {
     // 📆 Récupère la date du jour au format "yyyy-MM-dd"
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     logRevisions("📊 [getTodayGlobalSummary] pour $today");
 
-    // 📁 Référence vers le document du jour dans /revision_stats
-    final statsRef = _db.collection('users').doc(userId).collection('revision_stats').doc(today);
+    // 📁 Référence vers le document de stats du jour
+    final statsRef = _db
+        .collection('users') // 🔗 Chemin : collection utilisateur
+        .doc(userId) // 👤 Document correspondant à l’utilisateur
+        .collection('revision_stats') // 📁 Collection des stats quotidiennes
+        .doc(today); // 📄 Document du jour en cours
 
-    // 🧮 Initialisation des compteurs cumulés
-    int totalCorrect = 0; // ✅ Nombre total de bonnes réponses
-    int totalWrong = 0;   // ❌ Nombre total de mauvaises réponses
-    int revisionCount = 0; // 🔁 Nombre total de révisions effectuées
+    // 🧮 Initialisation des compteurs
+    int totalCorrect = 0;     // ✅ Nombre de bonnes réponses cumulées
+    int totalWrong = 0;       // ❌ Nombre de mauvaises réponses cumulées
+    int revisionCount = 0;    // 🔁 Nombre total de révisions enregistrées
+    int totalDuration = 0;    // ⏱ Temps total de réponse (en secondes)
 
-    // 👀 Ensemble des flashcards uniques vues (pas de doublons)
+    // 👀 Ensemble pour stocker les flashcards vues (sans doublons)
     final Set<String> seenFlashcards = {};
 
-    // 🔁 Fonction récursive qui explore toute l’arborescence des sous-sujets du jour
+    // 🔁 Fonction récursive pour explorer l’arborescence de sujets de manière profonde
     Future<void> explore(DocumentReference ref) async {
-      logRevisions("🔎 [explore] Exploration de ${ref.path}");
+      logRevisions("🔎 [explore] Exploration de ${ref.path}"); // 🪵 Log chemin exploré
 
-      // 📚 Récupère les sous-collections de ce document (ex: subsubject1, subsubject2...)
+      // 📚 Récupère dynamiquement les sous-collections subsubjectX
       final subCollections = await _nav.getSubCollectionsFromDoc(ref);
       logRevisions("📦 Sous-collections retournées : ${subCollections.keys}");
 
-      // 🔁 Pour chaque sous-collection (ex: subsubject1 → [docA, docB...])
+      // 🔁 Pour chaque sous-collection subsubjectX
       for (final colName in subCollections.keys) {
+        // 🔁 Pour chaque document (sujet) dans la sous-collection
         for (final doc in subCollections[colName]!.docs) {
           logRevisions("📁 Document trouvé : ${doc.reference.path}");
 
-          // 📄 Accède au résumé de révision : /meta/revision_summary
+          // 📄 Récupère le document /meta/revision_summary
           final summary = await doc.reference.collection('meta').doc('revision_summary').get();
 
+          // ✅ Si le résumé existe
           if (summary.exists) {
-            final data = summary.data()!; // 📦 Récupère les données du résumé
+            final data = summary.data()!; // 📦 Données du résumé
             logRevisions("📋 Données résumé dans ${doc.reference.path}/meta/revision_summary = $data");
 
-            // ✅ Incrémente les compteurs globaux
-            totalCorrect += (data['correctTotal'] ?? 0) as int;
-            totalWrong += (data['wrongTotal'] ?? 0) as int;
-            revisionCount += (data['revisionCount'] ?? 0) as int;
+            // ➕ Ajout des valeurs récupérées aux compteurs globaux
+            totalCorrect += (data['correctTotal'] ?? 0) as int;         // ✅ Ajout des bonnes réponses
+            totalWrong += (data['wrongTotal'] ?? 0) as int;             // ❌ Ajout des erreurs
+            revisionCount += (data['revisionCount'] ?? 0) as int;       // 🔁 Ajout des révisions
+            totalDuration += (data['totalDuration'] ?? 0) as int;       // ⏱ Ajout du temps total
 
-            // 👁️ Récupère les flashcards vues et les ajoute à l'ensemble
+            // 👁️ Ajout des flashcards vues (en évitant les doublons)
             final seenList = (data['flashcardsSeen'] as List?)?.cast<String>() ?? [];
-            seenFlashcards.addAll(seenList);
+            seenFlashcards.addAll(seenList); // 🧮 Ajout dans un Set pour unicité
             logRevisions("➕ ${seenList.length} flashcard(s) vues ajoutée(s), total unique = ${seenFlashcards.length}");
           } else {
+            // ⚠️ Résumé manquant pour ce sous-sujet
             logRevisions("⚠️ Aucun résumé trouvé pour ${doc.reference.path}/meta/revision_summary");
           }
 
-          // 🔁 Appelle récursivement cette fonction pour explorer plus bas
+          // 🔁 Appel récursif sur les enfants de ce document
           await explore(doc.reference);
         }
       }
     }
 
-    // ✅ Si le document du jour existe, on commence l’exploration
+    // 🚀 Déclenche l’exploration si le document existe
     final exists = await statsRef.get();
     if (exists.exists) {
-      await explore(statsRef);
+      await explore(statsRef); // 🔁 Explore récursivement à partir du document de base
     } else {
-      logRevisions("⚠️ Aucun document de stats trouvé pour $today");
+      logRevisions("⚠️ Aucun document de stats trouvé pour $today"); // 📢 Alerte si aucune stat ce jour-là
     }
 
-    // 📈 Calcule le pourcentage de succès en arrondissant
+    // 📈 Calcul du taux de réussite en pourcentage arrondi
     final successRate = revisionCount == 0
-        ? 0
-        : ((totalCorrect / (totalCorrect + totalWrong)) * 100).round();
+        ? 0 // 🧯 Si aucune révision : succès = 0
+        : ((totalCorrect / (totalCorrect + totalWrong)) * 100).round(); // 📊 (bonnes / total) * 100
     logRevisions("📊 Taux de succès = $successRate%");
 
-    // 📦 Résumé final retourné
+    // ⏱ Temps moyen par révision (secondes)
+    final avgTimePerRevision = revisionCount == 0
+        ? 0 // 🧯 Si aucune révision → moyenne 0
+        : (totalDuration / revisionCount).round(); // ⏱ Somme / nombre de révisions
+
+    // ⏱ Temps moyen par flashcard vue (secondes)
+    final avgTimePerFlashcard = seenFlashcards.isEmpty
+        ? 0 // 🧯 Aucune flashcard vue
+        : (totalDuration / seenFlashcards.length).round(); // ⏱ Somme / nombre flashcards uniques
+
+    logRevisions("⏱ Temps total = $totalDuration sec | Moy/revision = $avgTimePerRevision sec | Moy/flashcard = $avgTimePerFlashcard sec");
+
+    // 📦 Construction du résumé final à retourner
     final summary = {
-      'correctTotal': totalCorrect, // ✅ Total de bonnes réponses
-      'wrongTotal': totalWrong, // ❌ Total d’erreurs
-      'revisionCount': revisionCount, // 🔁 Révisions effectuées
-      'flashcardsSeen': seenFlashcards.length, // 👁️ Nombre unique de flashcards vues
-      'successRate': successRate, // 📈 Taux de réussite
+      'correctTotal': totalCorrect,               // ✅ Total bonnes réponses
+      'wrongTotal': totalWrong,                   // ❌ Total erreurs
+      'revisionCount': revisionCount,             // 🔁 Révisions totales
+      'flashcardsSeen': seenFlashcards.length,    // 👁️ Flashcards uniques vues
+      'successRate': successRate,                 // 📊 Taux de réussite
+      'avgTimePerRevision': avgTimePerRevision,   // ⏱ Moyenne / révision
+      'avgTimePerFlashcard': avgTimePerFlashcard, // ⏱ Moyenne / flashcard
     };
 
-    logRevisions("📦 Résumé final des stats = $summary");
-    return summary;
+    logRevisions("📦 Résumé final des stats = $summary"); // 🧾 Log final avant retour
+    return summary; // 🎯 Résultat retourné à l’appelant
   }
+
 
 
   /// 🔢 Compte toutes les flashcards de l'utilisateur, dans tous les sujets terminaux (feuilles)
@@ -289,6 +315,116 @@ class FirestoreRevisionsService {
 
     logRevisions("✅ [getTotalFlashcardsCount] Total final = $total flashcard(s)");
     return total; // 🎯 Résultat retourné
+  }
+
+
+  /// 🔍 Récupère le résumé de révision à un chemin donné (ex: subsubject0 > ID > meta/revision_summary)
+  Future<Map<String, dynamic>?> getSummaryAtPath({
+    required String userId,
+    required List<String> pathSegments, // ex: ['subsubject0', subjectId]
+  }) async {
+    logRevisions("🔎 [getSummaryAtPath] user=$userId | path=$pathSegments");
+
+    try {
+      // 📆 Date d’aujourd’hui
+      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+      // 📍 Point de départ : /users/{uid}/revision_stats/{today}
+      DocumentReference ref = _db
+          .collection('users')
+          .doc(userId)
+          .collection('revision_stats')
+          .doc(today);
+
+      // 🔁 Parcours du chemin dynamique (ex: subsubject0 > doc > subsubject1 > doc...)
+      for (int i = 0; i < pathSegments.length; i += 2) {
+        final col = pathSegments[i];
+        final docId = pathSegments[i + 1];
+        ref = ref.collection(col).doc(docId);
+      }
+
+      // 📄 Référence finale vers /meta/revision_summary
+      final summaryRef = ref.collection('meta').doc('revision_summary');
+      final snap = await summaryRef.get();
+
+      if (snap.exists) {
+        logRevisions("📦 Résumé trouvé à ${summaryRef.path} : ${snap.data()}");
+        return snap.data();
+      } else {
+        logRevisions("⚠️ Aucun résumé trouvé à ${summaryRef.path}");
+        return null;
+      }
+    } catch (e) {
+      logRevisions("❌ Erreur dans getSummaryAtPath : $e");
+      return null;
+    }
+  }
+
+  /// 🔍 Explore récursivement les sous-collections depuis un sujet racine
+  /// pour trouver le **premier** document `meta/revision_summary` existant.
+  Future<Map<String, dynamic>?> findFirstSummaryRecursively({
+    required String userId, // 👤 UID utilisateur (ex: "tmjevj...")
+    required List<String> startingPath, // 🧭 Liste ["subsubject0", "subjectId"] pour commencer
+  }) async {
+    logRevisions("🔎 [findFirstSummaryRecursively] Démarrage pour $userId | path=$startingPath");
+
+    // 📅 Récupère le document de la date du jour
+    DocumentReference ref = _db
+        .collection('users')
+        .doc(userId)
+        .collection('revision_stats')
+        .doc(DateFormat('yyyy-MM-dd').format(DateTime.now()));
+    logRevisions("📌 Point de départ = ${ref.path}");
+
+    // 🔁 Descend dans le chemin de départ (subsubject0/{subjectId})
+    for (int i = 0; i < startingPath.length; i += 2) {
+      final collection = startingPath[i];
+      final docId = startingPath[i + 1];
+      ref = ref.collection(collection).doc(docId);
+      logRevisions("↪️ Navigation vers $collection/$docId → ${ref.path}");
+    }
+
+    /// 🔁 Fonction récursive locale pour explorer les niveaux suivants
+    Future<Map<String, dynamic>?> recursiveExplore(DocumentReference current) async {
+      logRevisions("🔬 [recursiveExplore] Exploration de : ${current.path}");
+
+      // 🧪 Essaye de lire le résumé : /meta/revision_summary
+      final summary = await current.collection('meta').doc('revision_summary').get();
+      if (summary.exists) {
+        logRevisions("✅ Résumé trouvé dans : ${summary.reference.path}");
+        return summary.data(); // 📦 Retourne les données
+      } else {
+        logRevisions("❌ Aucun résumé dans : ${summary.reference.path}");
+      }
+
+      // 🔁 Parcours récursif des sous-niveaux : subsubject0 → subsubject5
+      for (int i = 0; i <= 5; i++) {
+        final subColName = 'subsubject$i'; // 📁 Nom de la collection à explorer
+        final subCol = current.collection(subColName); // 📦 Collection actuelle
+        final snap = await subCol.get(); // 📄 Tous les documents de cette collection
+
+        logRevisions("🔽 Exploration de $subColName → ${snap.docs.length} document(s)");
+
+        for (final doc in snap.docs) {
+          logRevisions("➡️ Descente dans : ${doc.reference.path}");
+          final found = await recursiveExplore(doc.reference); // 🔁 Appel récursif
+
+          if (found != null) {
+            return found; // ✅ Résumé trouvé en profondeur
+          }
+        }
+      }
+
+      logRevisions("🔚 Fin d'exploration pour : ${current.path} (aucun résumé trouvé)");
+      return null; // 🚫 Aucun résumé trouvé à ce niveau ou en-dessous
+    }
+
+    // 🚀 Lance l'exploration à partir du sujet racine
+    final result = await recursiveExplore(ref);
+    if (result == null) {
+      logRevisions("❗ Aucun résumé trouvé depuis $startingPath");
+    }
+    return result;
   }
 
 

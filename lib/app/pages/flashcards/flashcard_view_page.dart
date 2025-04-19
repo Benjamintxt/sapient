@@ -135,30 +135,57 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                       ),
                     ],
                   ),
-                  child: () {
-                    final imageUrl = showFront ? widget.imageFrontUrl : widget.imageBackUrl;
-                    final side = showFront ? 'front' : 'back';
-                    logFlashcardView("👁️ Affichage du côté $side");
+                  child: Builder(
+                    builder: (_) {
+                      // 🔍 Détermine la face affichée : recto ou verso
+                      final isFront = showFront;
+                      final side = isFront ? 'recto' : 'verso';
+                      logFlashcardView("👁️ Affichage de la face $side");
 
-                    if (imageUrl != null && imageUrl.isNotEmpty) {
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
+                      // 🔎 Texte et image associés à la face visible
+                      final text = isFront ? widget.front.trim() : widget.back.trim();
+                      final imageUrl = isFront ? widget.imageFrontUrl : widget.imageBackUrl;
+
+                      // 🧠 Cas 1 : il y a une image à afficher
+                      if (imageUrl != null && imageUrl.isNotEmpty) {
+                        logFlashcardView("🖼️ Image détectée pour le $side : $imageUrl");
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(12), // ⭕ Coins arrondis doux
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover, // 🧱 Remplit la zone disponible joliment
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                        );
+                      }
+
+                      // 🧠 Cas 2 : texte disponible à afficher
+                      if (text.isNotEmpty) {
+                        logFlashcardView("✍️ Texte détecté pour le $side : \"$text\"");
+                        return Text(
+                          text,
+                          style: const TextStyle(
+                            fontSize: 20, // 🔠 Taille confortable
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center, // 🧭 Centré
+                        );
+                      }
+
+                      // ❌ Cas 3 : ni texte ni image
+                      logFlashcardView("❗ Rien à afficher pour le $side");
+                      return const Text(
+                        '[Flashcard vide]',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
                         ),
-                      );
-                    } else {
-                      final text = showFront ? widget.front : widget.back;
-                      return Text(
-                        text,
-                        style: const TextStyle(fontSize: 20),
                         textAlign: TextAlign.center,
                       );
-                    }
-                  }(),
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 40),
