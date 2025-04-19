@@ -114,32 +114,33 @@ class FirestoreNavigationService {
     return docRef;
   }
 
-
-  /// Retourne un `Map` avec les noms de collections et leurs contenus si non vides.
+  /// 🔹 Retourne un `Map` avec les sous-collections nommées `subsubjectX` non vides.
+  /// 📦 Utile pour explorer récursivement les niveaux hiérarchiques de Firestore
   Future<Map<String, QuerySnapshot>> getSubCollectionsFromDoc(
-      DocumentReference ref,
+      DocumentReference ref, // 🔗 Référence du document Firestore dont on veut explorer les sous-collections
       ) async {
-    log("🔎 [getSubCollectionsFromDoc] → doc=${ref.path}");
+    log("🔎 [getSubCollectionsFromDoc] → doc=${ref.path}"); // 🖨️ Log du chemin du document de départ
 
-    final Map<String, QuerySnapshot> result = {}; // 📦 Résultat à retourner
+    final Map<String, QuerySnapshot> result = {}; // 📦 Initialisation de la map résultat
 
-    // 🔍 Récupère toutes les sous-collections (dynamique)
-    final collections = await ref.listCollections(); // 🧭 Liste dynamique (ex: Anglais, Grammaire…)
+    // 🔁 On parcourt les sous-collections normées : subsubject0 à subsubject5
+    for (int i = 0; i <= 5; i++) {
+      final colName = 'subsubject$i'; // 🏷️ Nom de la sous-collection normée (ex: subsubject0)
 
-    for (final col in collections) {
-      final colName = col.id;
-      final snapshot = await col.get(); // 📥 Lecture du contenu
+      final collectionRef = ref.collection(colName); // 📁 Référence vers cette sous-collection
+
+      final snapshot = await collectionRef.get(); // 📥 Récupère les documents présents dans la sous-collection
 
       if (snapshot.docs.isEmpty) {
-        log("⚠️ Collection $colName est vide.");
+        log("⚠️ Collection $colName est vide."); // ❌ Rien à explorer à ce niveau
       } else {
-        result[colName] = snapshot;
-        log("✅ Collection $colName → ${snapshot.docs.length} document(s)");
+        result[colName] = snapshot; // ✅ On ajoute cette sous-collection au résultat
+        log("✅ Collection $colName → ${snapshot.docs.length} document(s)"); // 🖨️ Log du nombre de documents trouvés
       }
     }
 
-    log("📦 Sous-collections retournées : ${result.keys.toList()}");
-    return result;
+    log("📦 Sous-collections retournées : ${result.keys.toList()}"); // 🖨️ Log final avec la liste des clés trouvées
+    return result; // 🎯 On retourne la map contenant toutes les sous-collections non vides
   }
 
 

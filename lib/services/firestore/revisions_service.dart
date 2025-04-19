@@ -85,27 +85,37 @@ class FirestoreRevisionsService {
 // ➕ Ajoute ce nom à la liste des noms lisibles (pour construire la hiérarchie)
     subjectNames.add(lastName);
 
-    // 🔁 Parcours de tous les niveaux de l’arborescence (y compris la feuille)
+// 🔁 Parcours de tous les niveaux de l’arborescence (sans inclure la feuille)
     for (int i = 0; i < parentPathIds.length; i++) {
-      logRevisions("🔗 [recordAnswer] Création niveau $i → ID=${parentPathIds[i]} | Nom=${subjectNames[i]}");
+      final levelKey = 'subsubject$i'; // 🏷️ Convention normée pour la collection (ex: subsubject0, subsubject1)
 
+      // 🖨️ Log détaillé du niveau en cours de création
+      logRevisions("🔗 [recordAnswer] Création niveau $i → ID=${parentPathIds[i]} | Nom=${subjectNames[i]} | levelKey=$levelKey");
+
+      // 📦 Crée (ou récupère) le document correspondant à ce niveau intermédiaire
       currentRef = await _nav.ensureLevelDocument(
-        parentRef: currentRef,              // 🔗 Document parent (niveau précédent dans la hiérarchie)
-        levelKey: subjectNames[i],          // 🏷️ Nom lisible (ex: 'Anglais', 'Grammaire')
-        docId: parentPathIds[i],            // 🆔 ID du document à créer/mettre à jour
-        subjectName: subjectNames[i],       // 📛 Nom affiché dans Firestore (pour debug ou UI)
+        parentRef: currentRef,          // 🔗 Document parent (niveau précédent)
+        levelKey: levelKey,             // 🏷️ Nom normé de la collection (subsubjectX)
+        docId: parentPathIds[i],        // 🆔 ID du document à créer ou récupérer
+        subjectName: subjectNames[i],   // 📛 Nom lisible du sujet (affiché dans le champ 'name')
       );
     }
 
-// ✅ Ajout final du niveau terminal (la feuille, ex: 'A1')
-    logRevisions("🏁 [recordAnswer] Insertion du niveau terminal (feuille) → ID=$subjectId | Nom=$lastName");
+// 🏁 Dernier niveau : ajout de la feuille finale (ex: 'A1')
+// 📁 La feuille est placée dans une collection nommée 'subsubject{level}'
+    final lastLevelKey = 'subsubject$level'; // 🏷️ Collection contenant la feuille
 
+// 🖨️ Log de confirmation
+    logRevisions("🏁 [recordAnswer] Insertion du niveau terminal (feuille) → ID=$subjectId | Nom=$lastName | levelKey=$lastLevelKey");
+
+// 📝 Création (ou récupération) du document feuille
     final subjectRef = await _nav.ensureLevelDocument(
-      parentRef: currentRef,      // 🔗 Dernier document intermédiaire (niveau juste au-dessus de la feuille)
-      levelKey: lastName,         // 🏷️ Nom de la collection contenant la feuille (ex: 'A1')
-      docId: subjectId,           // 🆔 ID du document feuille (la flashcard est rattachée à ce sujet)
-      subjectName: lastName,      // 📛 Nom lisible pour la feuille
+      parentRef: currentRef,      // 🔗 Dernier document intermédiaire (niveau juste au-dessus)
+      levelKey: lastLevelKey,     // 🏷️ Collection finale (subsubjectX)
+      docId: subjectId,           // 🆔 ID de la feuille
+      subjectName: lastName,      // 📛 Nom lisible pour la feuille (ex: 'A1')
     );
+
 
 
     // 📍 Référence unique de la réponse à cette flashcard dans 'answers'
