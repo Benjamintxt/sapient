@@ -10,6 +10,14 @@ import 'edit_dialog.dart'; // 📝 Dialogue d'édition
 import 'language_picker_dialog.dart'; // 🌍 Dialogue choix de langue
 import 'package:sapient/app/pages/user/statistics/statistics_page.dart'; // 📊 Page des stats
 
+// 🟣 Activation des logs de debug pour la page profil
+const bool kEnableProfileLogs = false;
+
+// 🖨️ Fonction utilitaire pour afficher les logs si activé
+void logProfile(String message) {
+  if (kEnableProfileLogs) print("[👤 ProfilePage] $message");
+}
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key}); // 🔑 Constructeur avec clé optionnelle
 
@@ -25,6 +33,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final local = AppLocalizations.of(context)!; // 🌍 Chargement des traductions
+
+    logProfile("🧱 Construction de la page profil");
 
     return Scaffold(
       extendBodyBehindAppBar: true, // 🪟 Fond visible sous la barre d'app
@@ -50,7 +60,10 @@ class _ProfilePageState extends State<ProfilePage> {
             left: 16, // ↔️ Distance depuis la gauche
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Color(0xFF4A148C), size: 28), // 🎨 Icône flèche violette
-              onPressed: () => Navigator.pop(context), // 🔙 Revenir en arrière
+              onPressed: () {
+                logProfile("🔙 Retour arrière (Navigator.pop)");
+                Navigator.pop(context); // 🔙 Revenir en arrière
+              },
             ),
           ),
 
@@ -96,16 +109,20 @@ class _ProfilePageState extends State<ProfilePage> {
                     ProfileEditableCard(
                       label: local.profile_name, // 🏷️ "Nom"
                       value: userName, // 🔠 Valeur du nom
-                      onEdit: () => showEditDialog(
-                        context: context,
-                        field: 'name',
-                        currentValue: userName,
-                        onSave: (newValue) {
-                          setState(() {
-                            // TODO: enregistrer le nouveau nom
-                          });
-                        },
-                      ),
+                      onEdit: () {
+                        logProfile("✏️ Édition du nom déclenchée");
+                        showEditDialog(
+                          context: context,
+                          field: 'name',
+                          currentValue: userName,
+                          onSave: (newValue) {
+                            logProfile("💾 Nom modifié en : $newValue");
+                            setState(() {
+                              // TODO: enregistrer le nouveau nom
+                            });
+                          },
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 12),
@@ -122,16 +139,20 @@ class _ProfilePageState extends State<ProfilePage> {
                     ProfileEditableCard(
                       label: local.learning_objectives, // 🏷️ "Objectifs"
                       value: userObjectives,
-                      onEdit: () => showEditDialog(
-                        context: context,
-                        field: 'objectives',
-                        currentValue: userObjectives,
-                        onSave: (newValue) {
-                          setState(() {
-                            // TODO: enregistrer les objectifs
-                          });
-                        },
-                      ),
+                      onEdit: () {
+                        logProfile("🎯 Édition des objectifs déclenchée");
+                        showEditDialog(
+                          context: context,
+                          field: 'objectives',
+                          currentValue: userObjectives,
+                          onSave: (newValue) {
+                            logProfile("💾 Objectifs modifiés en : $newValue");
+                            setState(() {
+                              // TODO: enregistrer les objectifs
+                            });
+                          },
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 12),
@@ -140,7 +161,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     ProfileIconCard(
                       label: local.change_language,
                       icon: Icons.language, // 🌍 Icône
-                      onTap: () => _showLanguagePickerDialog(context), // 📤 Affiche le dialogue
+                      onTap: () {
+                        logProfile("🌍 Ouverture du sélecteur de langue");
+                        _showLanguagePickerDialog(context); // 📤 Affiche le dialogue
+                      },
                     ),
 
                     const Spacer(), // 📏 Pousse le bouton vers le bas
@@ -151,9 +175,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         heroTag: 'stats_btn', // 🏷️ ID unique
                         backgroundColor: Colors.deepPurple, // 🎨 Violet
                         onPressed: () {
+                          logProfile("📊 Navigation vers StatisticsPage");
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const StatisticsPage()), // 📊 Ouvre la page des statistiques
+                            MaterialPageRoute(
+                                builder: (context) => const StatisticsPage()), // 📊 Ouvre la page des statistiques
                           );
                         },
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // 🟣 Coins arrondis

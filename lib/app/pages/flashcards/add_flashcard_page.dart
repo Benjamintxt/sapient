@@ -170,21 +170,40 @@ class _AddFlashcardPageState extends State<AddFlashcardPage> {
 
   /// ✅ Fonction appelée lors du clic sur "Sauvegarder"
   void _submit() async {
-    if (!_formKey.currentState!.validate()) return; // ❌ Ne continue pas si invalide
+    // ✅ Étape 1 : on vérifie si le formulaire est valide (non vide, pas d’erreur de validation)
+    if (!_formKey.currentState!.validate()) return;
 
-    final front = _frontController.text.trim(); // 🔤 Texte recto sans espace
-    final back = _backController.text.trim(); // 🔤 Texte verso sans espace
+    // ✅ Étape 2 : on récupère le texte du recto (front) et du verso (back), sans les espaces inutiles
+    final front = _frontController.text.trim(); // 🧠 Texte pour le recto
+    final back = _backController.text.trim();   // 🧠 Texte pour le verso
 
+    // ✅ Étape 3 : on copie les IDs du chemin des parents (pour éviter de modifier la liste d’origine)
+    List<String> correctedParentPathIds = [...widget.parentPathIds];
+
+    // ✅ Étape 4 : on initialise une copie du niveau fourni (ex: niveau 2 pour subsubject2)
+    int correctedLevel = widget.level;
+
+    // ✅ Étape 5 : sécurité anti-doublon : si le dernier ID des parents est égal au subjectId → on le retire
+    if (correctedParentPathIds.isNotEmpty &&
+        correctedParentPathIds.last == widget.subjectId) {
+      correctedParentPathIds.removeLast(); // ❌ Évite une répétition d’ID dans le chemin Firestore
+      correctedLevel -= 1; // 🧮 Réduit aussi le niveau car on a supprimé un maillon du chemin
+    }
+
+    // ✅ Étape 6 : on appelle le service Firestore pour ajouter la flashcard dans le bon dossier
     await _service.addFlashcard(
-      userId: widget.userId, // 👤 Utilisateur
-      subjectId: widget.subjectId, // 📁 Sujet concerné
-      level: widget.level, // 🔢 Niveau hiérarchique
-      parentPathIds: widget.parentPathIds, // 🧭 Chemin complet
-      front: front, // 📝 Texte recto
-      back: back, // 📝 Texte verso
+      userId: widget.userId,                 // 👤 ID de l'utilisateur actuel (Firebase Auth)
+      subjectId: widget.subjectId,           // 🏷️ ID du sujet (feuille) qui contiendra la flashcard
+      level: correctedLevel,                 // 🔢 Niveau hiérarchique du sujet (corrigé si besoin)
+      parentPathIds: correctedParentPathIds, // 🧭 Liste des IDs des sujets parents (ex: [Math, Géométrie])
+      front: front,                          // 📝 Contenu du recto (question ou terme)
+      back: back,                            // 📝 Contenu du verso (réponse ou définition)
     );
 
-    logAddFlashcard("✅ Flashcard ajoutée avec succès"); // 📋 Log de succès
-    Navigator.pop(context); // 🔙 Retour à la page précédente
+    // ✅ Étape 7 : log de confirmation + retour automatique en arrière
+    logAddFlashcard("✅ Flashcard ajoutée avec succès"); // 🖨️ Message debug
+    Navigator.pop(context); // 🔙 On revient à la page précédente
   }
+
+
 }

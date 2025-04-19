@@ -87,39 +87,54 @@ class FirestoreNavigationService {
       .doc(docId); // 📄 Document ciblé (créé ou mis à jour)
     log("📄 Cible : ${docRef.path}");
 
-    await docRef.set({ // 📥 Données enregistrées dans Firestore
+// 🔍 On essaie de récupérer le champ isCategory à partir du document original dans la base "subjects"
+    DocumentSnapshot? subjectSnap;
+    Map<String, dynamic>? subjectData;
+    bool isCategory = true; // ✅ Par défaut on suppose que c’est une catégorie
+
+    try {
+      // On tente de lire depuis la collection globale 'subjects' (racine)
+      subjectSnap = await FirebaseFirestore.instance.collection('subjects').doc(docId).get();
+      subjectData = subjectSnap.data() as Map<String, dynamic>?;
+      isCategory = subjectData?['isCategory'] ?? true;
+      log("🔎 [ensureLevelDocument] isCategory récupéré : $isCategory pour $docId");
+    } catch (e) {
+      log("⚠️ [ensureLevelDocument] Impossible de récupérer isCategory pour $docId : $e");
+    }
+
+// 📥 Données enregistrées dans Firestore
+    await docRef.set({
       'createdAt': FieldValue.serverTimestamp(), // ⏱️ Date technique (pour tri ou logs)
       'name': subjectName, // 🏷️ Nom du sujet affiché
-    }, SetOptions(merge: true)); // ✅ Fusionne avec les données existantes
+      'isCategory': isCategory, // ✅ Champ ajouté ici
+    }, SetOptions(merge: true));
+
 
     log("✅ Document enregistré : ${docRef.path}");
     return docRef;
   }
 
-  /// 🔹 Retourne toutes les sous-collections non vides d’un document donné
-  /// 🔹 Récupère toutes les sous-collections non vides d’un document donné
+
+  /// Retourne un `Map` avec les noms de collections et leurs contenus si non vides.
   Future<Map<String, QuerySnapshot>> getSubCollectionsFromDoc(
-      DocumentReference ref, /// - [ref] → DocumentReference : document source
+      DocumentReference ref,
       ) async {
     log("🔎 [getSubCollectionsFromDoc] → doc=${ref.path}");
 
-    final Map<String, QuerySnapshot> result = {}; // 📦 Map des sous-collections non vides
-    final List<String> collectionNames = ['subsubject1', 'subsubject2', 'subsubject3', 'subsubject4', 'subsubject5'];
+    final Map<String, QuerySnapshot> result = {}; // 📦 Résultat à retourner
 
-    for (final collectionName in collectionNames) {
-      try {
-        // 📂 On vérifie chaque sous-collection en l'interrogeant avec get()
-        final collectionRef = ref.collection(collectionName); // 📁 Accède à la sous-collection spécifique
-        final snapshot = await collectionRef.get(); // 📄 Snapshot Firestore
+    // 🔍 Récupère toutes les sous-collections (dynamique)
+    final collections = await ref.listCollections(); // 🧭 Liste dynamique (ex: Anglais, Grammaire…)
 
-        if (snapshot.docs.isNotEmpty) {
-          result[collectionName] = snapshot; // ✅ Ajout si non vide
-          log("✅ Collection $collectionName → ${snapshot.docs.length} documents");
-        } else {
-          log("⚠️ Collection $collectionName est vide.");
-        }
-      } catch (e) {
-        log("❌ Erreur lors de l'accès à la collection $collectionName : $e");
+    for (final col in collections) {
+      final colName = col.id;
+      final snapshot = await col.get(); // 📥 Lecture du contenu
+
+      if (snapshot.docs.isEmpty) {
+        log("⚠️ Collection $colName est vide.");
+      } else {
+        result[colName] = snapshot;
+        log("✅ Collection $colName → ${snapshot.docs.length} document(s)");
       }
     }
 

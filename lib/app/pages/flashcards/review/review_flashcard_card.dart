@@ -3,6 +3,14 @@
 
 import 'package:flutter/material.dart'; // 🎨 UI Flutter
 
+// 🟢 Constante pour activer ou désactiver les logs
+const bool kEnableFlashcardLogs = true;
+
+/// 🖨️ Fonction utilitaire pour afficher les logs si activés
+void logFlashcard(String message) {
+  if (kEnableFlashcardLogs) print(message); // ✅ Affiche uniquement si les logs sont activés
+}
+
 /// 🃏 Affiche une carte avec image ou texte et un effet de retournement
 class ReviewFlashcardCard extends StatelessWidget {
   final bool showQuestion; // ✅ true = recto (question), false = verso (réponse)
@@ -26,8 +34,15 @@ class ReviewFlashcardCard extends StatelessWidget {
         ? flashcard['front'] // 📝 Texte recto
         : flashcard['back']; // 📝 Texte verso
 
+    // 📋 Log de debug pour savoir ce qui va être affiché
+    logFlashcard("🃏 [ReviewFlashcardCard] Affichage du ${showQuestion ? 'recto' : 'verso'} : "
+        "${imageUrl != null && imageUrl.toString().isNotEmpty ? '📷 Image' : '📝 Texte'}");
+
     return GestureDetector(
-      onTap: onTap, // 👆 Permet le retournement de la carte
+      onTap: () {
+        logFlashcard("🔁 [ReviewFlashcardCard] Tap détecté → on retourne la carte");
+        onTap; // 👆 Permet le retournement de la carte
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300), // ⏱️ Animation de transition
         padding: const EdgeInsets.all(24), // 🧱 Padding intérieur

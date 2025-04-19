@@ -13,7 +13,7 @@ import 'edit_flashcard_image_viewer.dart'; // 🖼️ Visualiseur d’image dyna
 import 'edit_flashcard_action_buttons.dart'; // 🔘 Boutons actions édition (valider, changer côté, etc.)
 
 // ✅ Constante pour activer/désactiver les logs dans cette page
-const bool kEnableEditLogs = true;
+const bool kEnableEditLogs = false;
 
 /// 🖨️ Fonction de log centralisée pour l’édition
 void logEdit(String message) {

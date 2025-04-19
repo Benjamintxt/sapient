@@ -8,7 +8,7 @@ import 'package:sapient/app/pages/subject/subject_tile.dart'; // 🔹 Widget qui
 import 'package:sapient/services/firestore/subjects_service.dart'; // 📚 Service Firestore pour récupérer les sujets
 
 // 🟢 Active ou désactive les logs pour la liste des sujets
-const bool kEnableSubjectListLogs = true;
+const bool kEnableSubjectListLogs = false;
 
 // 🧾 Log conditionnel pour la liste des sujets
 void logSubjectList(String message) {

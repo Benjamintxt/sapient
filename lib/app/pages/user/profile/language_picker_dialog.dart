@@ -5,7 +5,7 @@ import 'package:flutter/material.dart'; // 🎨 UI Flutter
 import 'package:sapient/services/app_state.dart'; // 📦 Service d’état de l'application
 
 // 🟢 Active ou désactive les logs de debug pour le dialogue de sélection de langue
-const bool kEnableLanguagePickerDialogLogs = true;
+const bool kEnableLanguagePickerDialogLogs = false;
 
 /// 🧾 Log conditionnel pour le dialogue de sélection de langue
 void logLanguagePickerDialog(String message) {

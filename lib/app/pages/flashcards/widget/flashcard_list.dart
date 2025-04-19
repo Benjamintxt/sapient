@@ -10,7 +10,7 @@ import 'package:sapient/services/firestore/flashcards_service.dart'; // 📦 Ser
 import 'flashcard_tile.dart'; // 🔹 Widget réutilisable pour une flashcard individuelle
 
 // 🟢 Activer/désactiver les logs pour le widget de liste
-const bool kEnableFlashcardListLogs = true;
+const bool kEnableFlashcardListLogs = false;
 
 /// 📤 Fonction de log conditionnelle
 void logFlashcardList(String message) {
@@ -44,14 +44,29 @@ class FlashcardList extends StatelessWidget {
     final _flashcardsService = FirestoreFlashcardsService(); // 🔗 Instance du service Firestore
 
     logFlashcardList("📡 Demande du Stream de flashcards...");
+    // 🧠 Préparation du niveau et du chemin hiérarchique (parentPathIds)
+    // On crée une copie du chemin reçu pour pouvoir le corriger si besoin
+    final correctedParentPath = [...?parentPathIds];
+
+    // ⚠️ Sécurité : si le dernier élément du chemin est identique à subjectId, c’est une duplication
+    if (correctedParentPath.isNotEmpty && correctedParentPath.last == subjectId) {
+      correctedParentPath.removeLast(); // 🧽 On retire le doublon
+      logFlashcardList("⚠️ Duplication détectée → suppression du dernier élément de parentPathIds");
+    }
+
+    // 🔢 Calcul final du niveau hiérarchique à envoyer (longueur du chemin corrigé)
+    final correctedLevel = correctedParentPath.length;
+    logFlashcardList("📏 Calcul corrigé du niveau : level=$correctedLevel");
+
 
     return FutureBuilder<Stream<QuerySnapshot>>( // ⏳ Attend un Stream en résultat d'un Future
       future: _flashcardsService.getFlashcardsStream( // ✅ Utilisation de la bonne méthode getFlashcardsStream
         userId: userId, // 👤 Utilisateur courant
         subjectId: subjectId, // 📚 Sujet terminal
-        level: level, // 🔢 Profondeur dans l'arborescence
-        parentPathIds: parentPathIds, // 🧱 Chemin d'accès Firestore
+        level: correctedLevel, // 🔢 Profondeur dans l'arborescence
+        parentPathIds: correctedParentPath, // 🧱 Chemin d'accès Firestore
       ),
+
       builder: (context, futureSnapshot) {
         // 🔄 Pendant le chargement du Future
         if (futureSnapshot.connectionState != ConnectionState.done) {

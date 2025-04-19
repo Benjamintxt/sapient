@@ -5,7 +5,7 @@ import 'package:sapient/services/firestore/core.dart'; // 🔐 UID utilisateur
 import 'package:sapient/services/firestore/subjects_service.dart'; // 📚 Service Firestore pour sujets
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 🌐 Localisation
 
-const bool kEnableAddSubjectLogs = true; // 🟢 Active/désactive les logs
+const bool kEnableAddSubjectLogs = false; // 🟢 Active/désactive les logs
 void logAddSubject(String message) {
   if (kEnableAddSubjectLogs) debugPrint("[AddSubjectDialog] $message");
 }

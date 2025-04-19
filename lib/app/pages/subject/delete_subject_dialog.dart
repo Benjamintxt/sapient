@@ -6,7 +6,7 @@ import 'package:sapient/services/firestore/subjects_service.dart'; // 📚 Servi
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 🌍 Gestion de la traduction des textes
 
 // 🟢 Active ou désactive les logs pour cette boîte de dialogue
-const bool kEnableDeleteSubjectLogs = true;
+const bool kEnableDeleteSubjectLogs = false;
 
 // 🖨️ Fonction utilitaire pour afficher des logs conditionnels
 void logDeleteSubject(String message) {

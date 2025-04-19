@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 
 // 🟢 Activer/désactiver les logs d'image
-const bool kEnableEditImageLogs = true;
+const bool kEnableEditImageLogs = false;
 
 /// 🔊 Log conditionnel pour le debug image
 void logEditImage(String message) {

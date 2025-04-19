@@ -22,7 +22,7 @@ class SubjectPage extends StatelessWidget {
     this.title, // 🏷️ Titre facultatif (affiché en haut)
   });
 
-  static const bool kEnableSubjectPageLogs = true; // 🔊 Active/désactive les logs
+  static const bool kEnableSubjectPageLogs = false; // 🔊 Active/désactive les logs
   void logPage(String message) {
     if (kEnableSubjectPageLogs) debugPrint("[SubjectPage] $message");
   }

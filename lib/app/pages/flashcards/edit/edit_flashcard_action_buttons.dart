@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart'; // 🎨 UI Flutter
 
 // 🟢 Active ou désactive les logs de debug pour les boutons d'action
-const bool kEnableEditFlashcardButtonsLogs = true;
+const bool kEnableEditFlashcardButtonsLogs = false;
 
 /// 🔣 Fonction de log conditionnelle
 void logEditFlashcardButtons(String message) {

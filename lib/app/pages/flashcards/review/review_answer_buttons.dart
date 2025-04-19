@@ -3,6 +3,14 @@
 
 import 'package:flutter/material.dart'; // 🎨 UI Flutter
 
+// 🟢 Constante pour activer ou désactiver les logs
+const bool kEnableReviewLogs = true;
+
+/// 🖨️ Fonction utilitaire pour afficher les logs si activés
+void logReview(String message) {
+  if (kEnableReviewLogs) print(message); // ✅ Affiche uniquement si les logs sont activés
+}
+
 /// 🔘 Boutons pour répondre à une flashcard pendant la révision
 ///
 /// Affiche deux boutons flottants : "mauvaise réponse" (❌) et "bonne réponse" (✅).
@@ -23,7 +31,10 @@ class ReviewAnswerButtons extends StatelessWidget {
         // ❌ Bouton "mauvaise réponse"
         FloatingActionButton(
           heroTag: 'fail_button', // 🏷️ Identifiant unique (évite les conflits d’animation)
-          onPressed: () => onAnswer(false), // 📥 Envoie false si mauvaise réponse
+          onPressed: () {
+            logReview("❌ [ReviewAnswerButtons] Bouton mauvaise réponse cliqué");
+            onAnswer(false); // 📥 Envoie false si mauvaise réponse
+          },
           backgroundColor: Colors.deepPurple, // 🎨 Couleur du bouton
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // ⤴️ Coins arrondis
           child: const Icon(Icons.close, color: Colors.white), // ❌ Icône croix
@@ -34,7 +45,10 @@ class ReviewAnswerButtons extends StatelessWidget {
         // ✅ Bouton "bonne réponse"
         FloatingActionButton(
           heroTag: 'success_button', // 🏷️ Identifiant unique
-          onPressed: () => onAnswer(true), // 📥 Envoie true si bonne réponse
+          onPressed: () {
+            logReview("✅ [ReviewAnswerButtons] Bouton bonne réponse cliqué");
+            onAnswer(true); // 📥 Envoie true si bonne réponse
+          },
           backgroundColor: Colors.deepPurple,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: const Icon(Icons.check, color: Colors.white), // ✔️ Icône check

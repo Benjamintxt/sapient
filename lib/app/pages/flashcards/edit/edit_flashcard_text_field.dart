@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 
 // 🟢 Activer/désactiver les logs d’édition de flashcard
-const bool kEnableEditFlashcardLogs = true;
+const bool kEnableEditFlashcardLogs = false;
 
 /// 🖨️ Fonction de log conditionnelle
 void logEditFlashcard(String message) {

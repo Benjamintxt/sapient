@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart'; // 🎨 UI Flutter
 
 // 🟢 Active ou désactive les logs de debug pour les cartes avec icône
-const bool kEnableProfileIconCardLogs = true;
+const bool kEnableProfileIconCardLogs = false;
 
 /// 🧾 Log conditionnel pour les cartes avec icône
 void logProfileIconCard(String message) {

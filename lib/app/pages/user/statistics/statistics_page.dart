@@ -66,8 +66,11 @@ class StatisticsPage extends StatelessWidget {
 
           final data = snapshot.data!; // 📦 Données récupérées
           final seen = data['flashcardsSeen'] ?? 0; // 👁️ Nombre de cartes vues
+          final total = data['flashcardsTotal'] ?? 0; // 📦 Nombre total de flashcards
+          final notSeen = (total - seen).clamp(0, total); // 🔴 Jamais vues (protège contre négatif)
           final revisions = data['revisionCount'] ?? 0; // 🔁 Nombre de révisions
           final successRate = data['successRate'] ?? 0; // ✅ Pourcentage de succès
+
 
           logStats('👀 flashcardsSeen = $seen');
           logStats('🔁 revisionCount = $revisions');
@@ -97,7 +100,7 @@ class StatisticsPage extends StatelessWidget {
                               title: local.flashcards_reviewed, // 🏷️ Titre
                               leftValue: seen.toString(), // 🔢 Valeur gauche
                               leftLabel: local.seen, // 🟢 Libellé gauche
-                              rightValue: '?', // ❓ Valeur non vue (placeholder)
+                              rightValue: notSeen.toString(), // // ❓ Valeur non vue (placeholder) ✅ Maintenant dynamique
                               rightLabel: local.never_seen, // 🔴 Libellé droite
                             ),
                           ),

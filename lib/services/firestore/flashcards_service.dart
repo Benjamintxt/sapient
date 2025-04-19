@@ -24,61 +24,83 @@ class FirestoreFlashcardsService {
 
   /// 🔹 Récupère toutes les flashcards d'un sujet donné (résultat unique, non Stream)
   Future<QuerySnapshot<Map<String, dynamic>>> getFlashcardsRaw({
-    required String userId, /// - [userId] : ID de l'utilisateur connecté
-    required String subjectId, /// - [subjectId] : ID du sujet cible
-    required int level, /// - [level] : niveau hiérarchique
-    required List<String> parentPathIds, /// - [parentPathIds] : chemin hiérarchique complet
+    required String userId,            // 👤 ID de l'utilisateur connecté
+    required String subjectId,        // 📚 ID du sujet (feuille terminale)
+    required int level,               // 🔢 Niveau hiérarchique dans la structure
+    required List<String> parentPathIds, // 🧭 Chemin des parents (depuis racine jusqu’au parent direct)
   }) async {
-    logFlashcards("📔 [getFlashcardsRaw] user=$userId, level=$level, subject=$subjectId");
+    logFlashcards("📔 [getFlashcardsRaw] Début → user=$userId | level=$level | subject=$subjectId");
 
-    // 🔗 Récupère la référence au document du sujet cible
+    // ✅ Corrige les répétitions si subjectId est dupliqué à la fin de parentPathIds
+    final correctedPath = [...parentPathIds]; // 🔁 Copie de la liste
+    if (correctedPath.isNotEmpty && correctedPath.last == subjectId) {
+      correctedPath.removeLast(); // ❌ Supprime l’ID final s’il est dupliqué
+      logFlashcards("⚠️ [getFlashcardsRaw] Duplication détectée dans parentPathIds → suppression de l'ID final");
+    }
+
+    // 🔗 Récupère la référence au document du sujet cible (niveau donné dans la hiérarchie)
     final docRef = await _nav.getSubSubjectDocRef(
-      userId: userId, // 👤 Utilisateur
-      level: level, // 🔢 Niveau hiérarchique
-      parentPathIds: parentPathIds, // 🧭 Chemin parent
-      subjectId: subjectId, // 🆔 ID sujet
+      userId: userId,                  // 👤 Utilisateur
+      level: level,                    // 🔢 Niveau du sujet
+      parentPathIds: correctedPath,   // 🧭 Chemin vers le parent du sujet
+      subjectId: subjectId,           // 🆔 Sujet final (feuille contenant les flashcards)
     );
+    logFlashcards("📌 Référence document sujet : ${docRef.path}");
 
-    // 📂 Accède à la collection des flashcards et les trie par date
-    return await docRef.collection('flashcards').orderBy('timestamp').get();
+    // 📂 Accède à la sous-collection "flashcards" et les trie par date croissante
+    final result = await docRef.collection('flashcards')
+        .orderBy('timestamp') // 🕒 Tri ascendant
+        .get(); // 📦 Requête unique
+
+    logFlashcards("📄 ${result.docs.length} flashcard(s) trouvée(s) dans ${docRef.path}");
+    return result; // 🔁 Renvoie le snapshot Firestore contenant les flashcards
   }
 
   /// 🔹 Ajoute une nouvelle flashcard dans un sujet donné
   Future<void> addFlashcard({
-    required String userId, /// - ID utilisateur
-    required String subjectId, /// - ID du sujet parent
-    required int level, /// - Niveau dans la hiérarchie
-    required List<String> parentPathIds, /// - Chemin complet dans la hiérarchie
-    required String front, /// - Contenu du recto
-    required String back, /// - Contenu du verso
-    String? imageFrontUrl, /// - URL image recto (optionnelle)
-    String? imageBackUrl, /// - URL image verso (optionnelle)
+    required String userId,           // 👤 ID utilisateur
+    required String subjectId,        // 🆔 ID du sujet (feuille) dans lequel ajouter la carte
+    required int level,               // 🔢 Niveau hiérarchique dans la structure
+    required List<String> parentPathIds, // 🧭 Chemin complet vers le sujet (ex: [MathID, GeoID])
+    required String front,            // 📄 Contenu du recto
+    required String back,             // 📄 Contenu du verso
+    String? imageFrontUrl,            // 🖼️ URL image recto (optionnelle)
+    String? imageBackUrl,             // 🖼️ URL image verso (optionnelle)
   }) async {
-    logFlashcards("➕ [addFlashcard] subject=$subjectId, front=$front, back=$back");
+    logFlashcards("➕ [addFlashcard] DÉBUT : subject=$subjectId | level=$level | parentPathIds=$parentPathIds");
 
-    // 🔗 Référence au document du sujet
+    // ✅ Corrige les répétitions potentielles du sujetId dans parentPathIds
+    final correctedPath = [...parentPathIds]; // 🧬 Clone de la liste pour ne pas modifier l’original
+    if (correctedPath.isNotEmpty && correctedPath.last == subjectId) {
+      logFlashcards("⚠️ [addFlashcard] Correction du chemin : suppression de l'ID dupliqué à la fin");
+      correctedPath.removeLast(); // ❌ Supprime la redondance si présente
+    }
+
+    // 🔗 Récupère la référence du document cible (le sujet terminal)
     final docRef = await _nav.getSubSubjectDocRef(
       userId: userId,
       level: level,
-      parentPathIds: parentPathIds,
+      parentPathIds: correctedPath,
       subjectId: subjectId,
     );
+    logFlashcards("📌 Référence obtenue : ${docRef.path}");
 
-    // 📝 Données à insérer
+    // 📝 Prépare les données de la nouvelle flashcard
     final data = {
-      'front': front, // ✏️ Texte recto
-      'back': back, // ✏️ Texte verso
-      'timestamp': FieldValue.serverTimestamp(), // ⏱️ Pour trier les flashcards
+      'front': front,                                // 🖊 Texte recto
+      'back': back,                                  // 🖊 Texte verso
+      'timestamp': FieldValue.serverTimestamp(),     // ⏱ Date/heure automatique pour tri
     };
 
-    // 📸 Ajoute les images si présentes
+    // 🖼️ Ajout conditionnel des images si présentes
     if (imageFrontUrl != null) data['imageFrontUrl'] = imageFrontUrl;
     if (imageBackUrl != null) data['imageBackUrl'] = imageBackUrl;
 
-    // 🚀 Ajoute la flashcard à Firestore
+    // 🚀 Envoi dans Firestore dans la sous-collection `flashcards`
     await docRef.collection('flashcards').add(data);
-    logFlashcards("✅ Flashcard ajoutée dans ${docRef.path}");
+    logFlashcards("✅ Flashcard ajoutée dans ${docRef.path}/flashcards");
   }
+
 
   /// 🔹 Met à jour une flashcard existante
   Future<void> updateFlashcard({
@@ -120,48 +142,58 @@ class FirestoreFlashcardsService {
 
   /// 🔹 Supprime une flashcard et ses images si elles existent
   Future<void> deleteFlashcard({
-    required String userId, /// - ID utilisateur
-    required String subjectId, /// - ID sujet parent
-    required int level, /// - Niveau dans la hiérarchie
-    required List<String> parentPathIds, /// - Chemin complet jusqu'au sujet
-    required String flashcardId, /// - ID de la flashcard à supprimer
+    required String userId,           // 👤 ID de l'utilisateur connecté
+    required String subjectId,        // 🆔 ID du sujet contenant la flashcard
+    required int level,               // 🔢 Niveau hiérarchique (ex: 3 pour subsubject3)
+    required List<String> parentPathIds, // 🧭 Chemin complet vers le sujet
+    required String flashcardId,      // 🃏 ID unique de la flashcard à supprimer
   }) async {
-    logFlashcards("🚮 [deleteFlashcard] id=$flashcardId");
+    logFlashcards("🚮 [deleteFlashcard] DÉBUT → subject=$subjectId | level=$level | flashcardId=$flashcardId");
 
-    // 🔗 Référence au sujet
+    // ✅ Corrige les éventuelles répétitions de subjectId dans parentPathIds
+    final correctedPath = [...parentPathIds]; // 🧬 Copie sécurisée
+    if (correctedPath.isNotEmpty && correctedPath.last == subjectId) {
+      correctedPath.removeLast(); // ❌ Supprime la duplication si elle existe
+      logFlashcards("⚠️ [deleteFlashcard] Correction du chemin : suppression du dernier ID dupliqué");
+    }
+
+    // 🔗 Récupère la référence du document sujet contenant la flashcard
     final docRef = await _nav.getSubSubjectDocRef(
       userId: userId,
       level: level,
-      parentPathIds: parentPathIds,
+      parentPathIds: correctedPath,
       subjectId: subjectId,
     );
+    logFlashcards("📌 Référence sujet = ${docRef.path}");
 
-    // 🔗 Référence à la flashcard spécifique
+    // 🔗 Récupère la référence exacte de la flashcard à supprimer
     final ref = docRef.collection('flashcards').doc(flashcardId);
-    final snap = await ref.get(); // 📄 Lecture du document
-    final data = snap.data(); // 📦 Contenu du document
+    final snap = await ref.get(); // 🔍 Lecture du document flashcard
+    final data = snap.data(); // 📦 Récupère les données (peut contenir des URLs d'image)
 
-    // 🔍 Si la flashcard existe et contient des images, on les supprime
+    // 🧹 Supprime les images si elles sont présentes dans le document
     if (data != null) {
       Future<void> deleteImage(String? url) async {
-        // ❗ Supprime uniquement si l'URL est valide
         if (url != null && url.isNotEmpty) {
           try {
-            final ref = _storage.refFromURL(url); // 🔗 Référence au fichier dans Storage
-            await ref.delete(); // 🗑️ Suppression
-            logFlashcards("🖼️ Image supprimée : $url");
+            final imageRef = _storage.refFromURL(url); // 🔗 Référence à l'image dans Firebase Storage
+            await imageRef.delete(); // 🗑️ Supprime le fichier distant
+            logFlashcards("🖼️ Image supprimée depuis le storage : $url");
           } catch (e) {
-            logFlashcards("❌ Erreur suppression image : $e");
+            logFlashcards("❌ Erreur lors de la suppression de l'image : $e");
           }
         }
       }
-      await deleteImage(data['imageFrontUrl']); // 📸 Supprimer image recto
-      await deleteImage(data['imageBackUrl']); // 📸 Supprimer image verso
+
+      await deleteImage(data['imageFrontUrl']); // 🖼️ Supprime image recto si présente
+      await deleteImage(data['imageBackUrl']);  // 🖼️ Supprime image verso si présente
+    } else {
+      logFlashcards("⚠️ Aucune donnée trouvée pour la flashcard $flashcardId (peut déjà être supprimée)");
     }
 
-    // 🗑️ Supprime la flashcard de Firestore
+    // 🗑️ Supprime le document flashcard dans Firestore
     await ref.delete();
-    logFlashcards("✅ Flashcard supprimée : ${ref.path}");
+    logFlashcards("✅ Flashcard supprimée avec succès : ${ref.path}");
   }
 
   /// 🔹 Upload une image dans Firebase Storage et retourne son URL publique
@@ -194,31 +226,52 @@ class FirestoreFlashcardsService {
   }
 
   /// 🔁 Récupère un Stream en temps réel des flashcards pour un sujet donné
-  /// Permet d’écouter automatiquement les changements (ajouts/suppressions)
+  /// 🔁 Permet d’écouter automatiquement les changements (ajouts/suppressions) de flashcards en temps réel
   Future<Stream<QuerySnapshot>> getFlashcardsStream({
-    required String userId,           // 👤 ID de l'utilisateur connecté
-    required String subjectId,        // 📚 ID du sujet (feuille) dont on veut les flashcards
-    required int level,               // 🧭 Niveau hiérarchique (0 = racine, 1 = sous-sujet, ...)
+    required String userId,            // 👤 ID de l'utilisateur connecté
+    required String subjectId,         // 📚 ID du sujet (feuille) dont on veut les flashcards
+    required int level,                // 🧭 Niveau hiérarchique (0 = racine, 1 = sous-sujet, ...)
     required List<String>? parentPathIds, // 🧱 Chemin des parents dans la hiérarchie (ex: ['abc', 'def'])
-  }) async { // 🚀 Fonction asynchrone car elle récupère un DocumentReference avant de retourner un Stream
+  }) async {
+    // 📝 Log d'entrée
+    logFlashcards("📡 [getFlashcardsStream] → user=$userId | level=$level | subject=$subjectId");
+
+    // ✅ Copie de parentPathIds pour éviter les effets de bord
+    final correctedPath = [...?parentPathIds];
+
+    // ⚠️ Correction automatique si le dernier ID de parentPathIds est égal à subjectId
+    if (correctedPath.isNotEmpty && correctedPath.last == subjectId) {
+      correctedPath.removeLast(); // ❌ Supprime la duplication
+      logFlashcards("⚠️ [getFlashcardsStream] Duplication détectée dans parentPathIds → suppression du dernier élément");
+    }
 
     // 🔍 Récupère dynamiquement la référence Firestore du sujet (feuille terminale)
     final docRef = await _nav.getSubSubjectDocRef(
-      userId: userId,                 // 👤 Utilisateur courant (racine de la hiérarchie)
-      level: level,                   // 🔢 Niveau dans la hiérarchie
-      parentPathIds: parentPathIds!,  // 📂 Liste des parents, forcée non-nulle ici (assumée correcte)
-      subjectId: subjectId,           // 🎯 ID du sujet terminal (feuille contenant les flashcards)
-    ); // 📌 À ce stade, on a une référence du type : /users/{uid}/subjects/.../subsubjectX/{subjectId}
+      userId: userId,               // 👤 Utilisateur courant
+      level: level,                 // 🔢 Niveau dans la hiérarchie
+      parentPathIds: correctedPath, // ✅ Chemin corrigé
+      subjectId: subjectId,         // 🆔 ID de la feuille terminale
+    );
 
-    // 📚 On cible la sous-collection "flashcards" sous ce document
+    // 📝 Log de la référence obtenue
+    logFlashcards("📌 Référence sujet cible : ${docRef.path}");
+
+    // 📁 Accès à la sous-collection "flashcards" sous ce document
     final flashcardsRef = docRef.collection('flashcards');
+    logFlashcards("📂 Accès à la sous-collection : ${flashcardsRef.path}");
 
-    // 🔄 Retourne un Stream des flashcards triées par date (timestamp croissant)
-    return flashcardsRef.orderBy(
-      'timestamp',                    // 🕒 Clé de tri : champ 'timestamp' (mis à jour à chaque ajout ou modif)
-      descending: false,              // ⬆️ Ordre croissant (les plus anciennes en premier)
-    ).snapshots();                    // 📡 Convertit la requête en un flux Stream en temps réel
+    // 🔁 Préparation du Stream des flashcards triées par date croissante
+    final stream = flashcardsRef
+        .orderBy('timestamp', descending: false) // 🕒 Tri par timestamp croissant
+        .snapshots();                            // 📡 Flux en temps réel
+
+    // 🟢 Log de confirmation
+    logFlashcards("✅ [getFlashcardsStream] Flux prêt (écoute en temps réel des flashcards)");
+
+    return stream; // 🔁 Retourne le flux au widget
   }
+
+
 
 
 }

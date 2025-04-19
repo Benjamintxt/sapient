@@ -6,7 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 🌐 Traduction
 import 'package:sapient/app/pages/flashcards/edit/edit_flashcard_page.dart'; // ✏️ Page d’édition
 
 // 🔧 Logs de debug activables
-const bool kEnableFlashcardViewLogs = true;
+const bool kEnableFlashcardViewLogs = false;
 void logFlashcardView(String msg) {
   if (kEnableFlashcardViewLogs) print('[FlashcardView] $msg');
 }

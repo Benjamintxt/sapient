@@ -24,7 +24,7 @@ class SubjectTile extends StatelessWidget {
     required this.parentPathIds, // 📌 Liste des IDs parents
   });
 
-  static const bool kEnableSubjectTileLogs = true; // 🟢 Active/désactive les logs de debug
+  static const bool kEnableSubjectTileLogs = false; // 🟢 Active/désactive les logs de debug
   void logTile(String message) {
     if (kEnableSubjectTileLogs) debugPrint("[SubjectTile] $message");
   }

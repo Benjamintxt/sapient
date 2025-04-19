@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart'; // 🎨 UI Flutter
 
 // 🟢 Active ou désactive les logs de debug pour les cartes statiques
-const bool kEnableProfileCardLogs = true;
+const bool kEnableProfileCardLogs = false;
 
 /// 🧾 Log conditionnel pour les cartes statiques
 void logProfileCard(String message) {

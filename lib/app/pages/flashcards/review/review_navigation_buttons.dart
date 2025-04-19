@@ -3,6 +3,14 @@
 
 import 'package:flutter/material.dart'; // 🎨 UI Flutter
 
+// 🟢 Constante pour activer/désactiver les logs
+const bool kEnableReviewLogs = false;
+
+/// 🖨️ Fonction utilitaire pour afficher les logs de navigation si activés
+void logReviewNav(String message) {
+  if (kEnableReviewLogs) print(message); // ✅ Affiche uniquement si activé
+}
+
 /// 🔘 Widget pour afficher les deux flèches de navigation (gauche et droite)
 class ReviewNavigationButtons extends StatelessWidget {
   final VoidCallback onPrevious; // ⬅️ Action quand on clique sur "précédent"
@@ -19,18 +27,22 @@ class ReviewNavigationButtons extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center, // 📍 Centre les deux flèches horizontalement
       children: [
-        // 🔙 Flèche gauche (précédent)
+// 🔙 Flèche gauche (précédent)
         IconButton(
-          icon: const Icon(Icons.arrow_back_ios), // ⬅️ Icône flèche gauche
-          onPressed: onPrevious, // ⬅️ Appelle la fonction "précédent"
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () {
+            logReviewNav("⬅️ [ReviewNavigationButtons] Flèche précédente cliquée");
+            onPrevious(); // ✅ Appelle la fonction
+          },
         ),
 
-        const SizedBox(width: 24), // 🧱 Espacement entre les deux flèches
-
-        // 🔜 Flèche droite (suivant)
+// 🔜 Flèche droite (suivant)
         IconButton(
-          icon: const Icon(Icons.arrow_forward_ios), // ➡️ Icône flèche droite
-          onPressed: onNext, // ➡️ Appelle la fonction "suivant"
+          icon: const Icon(Icons.arrow_forward_ios),
+          onPressed: () {
+            logReviewNav("➡️ [ReviewNavigationButtons] Flèche suivante cliquée");
+            onNext(); // ✅ Appelle la fonction
+          },
         ),
       ],
     );

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart'; // 🎨 UI Flutter
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 🌐 Localisation
 
 // 🟢 Active ou désactive les logs de debug pour le dialogue d'édition
-const bool kEnableEditDialogLogs = true;
+const bool kEnableEditDialogLogs = false;
 
 /// 🧾 Log conditionnel pour le dialogue d'édition
 void logEditDialog(String message) {

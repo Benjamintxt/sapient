@@ -18,7 +18,7 @@ import 'package:sapient/app/pages/flashcards/widget/camera_add_flashcard_dialog.
 // 🧠 Services Firestore
 import 'package:sapient/services/firestore/flashcards_service.dart'; // 🃏 Service dédié à la gestion des flashcards (CRUD, Firestore)
 
-const bool kEnableFlashcardPageLogs = true; // 🟢 Active les logs de debug
+const bool kEnableFlashcardPageLogs = false; // 🟢 Active les logs de debug
 void logFlashcardPage(String msg) {
   if (kEnableFlashcardPageLogs) debugPrint("[FlashcardPage] $msg");
 }

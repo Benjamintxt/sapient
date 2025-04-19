@@ -23,9 +23,17 @@ class StatisticsController {
 
   /// 📊 Récupère les données de statistiques globales de la journée
   static Future<Map<String, dynamic>> getTodaySummary(String uid) async {
-    logStatsController('📡 Requête des stats pour UID = $uid'); // 🖨️ Log appel méthode
-    final stats = await FirestoreRevisionsService().getTodayGlobalSummary(uid); // 📡 Récupère les stats Firestore
-    logStatsController('📦 Stats reçues : $stats'); // 🖨️ Log retour
+    logStatsController('📡 Requête des stats pour UID = $uid');
+
+    // 🔄 Récupère les stats du jour
+    final stats = await FirestoreRevisionsService().getTodayGlobalSummary(uid);
+
+    // 🔢 Récupère le nombre total de flashcards
+    final total = await FirestoreRevisionsService().getTotalFlashcardsCount(uid);
+    stats['flashcardsTotal'] = total;
+
+    logStatsController('📦 Stats complètes : $stats');
     return stats;
   }
+
 }
