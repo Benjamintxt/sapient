@@ -9,6 +9,9 @@ import 'package:sapient/app/pages/user/profile/profile_page.dart'; // 👤 Page 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 🌍 Localisation
 import 'package:firebase_auth/firebase_auth.dart'; // 🔐 Authentification Firebase
 
+import 'package:sapient/app/pages/gamification/gamification_page.dart'; // 🌟 Page gamification
+
+
 // 📚 Page principale d’un niveau de sujets/sous-sujets
 class SubjectPage extends StatelessWidget {
   final int level; // 🔢 Niveau dans la hiérarchie (0 = racine)
@@ -157,16 +160,15 @@ class SubjectPage extends StatelessWidget {
             child: const Icon(Icons.person, color: Colors.white),
           ),
 
-          // 📊 Accès aux statistiques
+          // 🌟 Accès à la page de gamification (bonsaï)
           FloatingActionButton(
-            heroTag: "stats_button",
+            heroTag: "gamification_button",
             backgroundColor: Colors.deepPurple,
             onPressed: () {
-              print("Fonctionnalité des statistiques activée plus tard."); // Ajout du print
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: (_) => const StatisticsPage()),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const GamificationPage()),
+              );
             },
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: const Icon(Icons.emoji_events, color: Colors.white),
