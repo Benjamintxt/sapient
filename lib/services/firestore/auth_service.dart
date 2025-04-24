@@ -1,96 +1,105 @@
-// lib/services/auth_service.dart
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:sapient/app/pages/utils/error_handler.dart';
 
-import 'package:firebase_auth/firebase_auth.dart'; // 🔐 Firebase Auth pour la gestion des comptes
+const bool kEnableAuthLogs = true;
 
-const bool kEnableAuthLogs = true; // ✅ Active les logs de debug pour l’authentification
-
-/// 🖨️ Fonction de log pour les opérations d'authentification
 void logAuth(String message) {
-  if (kEnableAuthLogs) print(message); // 📢 Affiche uniquement si les logs sont activés
+  if (kEnableAuthLogs) print(message);
 }
 
-/// 🔐 Service centralisé pour la gestion de l'authentification (login, logout, utilisateur courant...)
+/// Centralized authentication service
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance; // 🔗 Accès à l’instance Firebase Auth
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// 🔹 Retourne l’utilisateur actuellement connecté (ou null si déconnecté)
+  /// Get the current Firebase user
   User? get currentUser {
-    final user = _auth.currentUser; // 👤 Utilisateur actuel
-    logAuth("👤 Utilisateur courant : ${user?.uid ?? 'Aucun'}");
+    final user = _auth.currentUser;
+    logAuth("Utilisateur courant : ${user?.uid ?? 'Aucun'}");
     return user;
   }
 
-  /// 🔹 Retourne l’UID de l’utilisateur connecté (ou null)
+  /// Get current user's UID
   String? getCurrentUserUid() {
     try {
-      final uid = _auth.currentUser?.uid; // 🔎 UID récupéré
-      logAuth("🔐 UID courant : $uid");
+      final uid = _auth.currentUser?.uid;
+      logAuth("UID courant : $uid");
       return uid;
     } catch (e) {
-      logAuth("❌ Erreur récupération UID : $e");
+      logAuth("Erreur récupération UID : $e");
       return null;
     }
   }
 
-  /// 🔹 Connexion anonyme à Firebase Auth (utile pour un accès temporaire sans compte)
-  Future<User?> signInAnonymously() async {
-    try {
-      logAuth("🚀 Connexion anonyme...");
-      final result = await _auth.signInAnonymously(); // 🔓 Connexion temporaire
-      logAuth("✅ Connecté en anonyme : ${result.user?.uid}");
-      return result.user;
-    } catch (e) {
-      logAuth("❌ Erreur connexion anonyme : $e");
-      return null;
-    }
+  /// Sign in anonymously
+  Future<User?> signInAnonymously(BuildContext context) async {
+    User? user;
+    await ErrorHandler.safeCall(context, () async {
+      logAuth("Connexion anonyme...");
+      final result = await _auth.signInAnonymously();
+      user = result.user;
+      logAuth("Connecté en anonyme : ${user?.uid}");
+    }, errorMessage: "Échec de la connexion anonyme.");
+    return user;
   }
 
-  /// 🔹 Connexion avec email et mot de passe
+  /// Sign in with email and password
   Future<User?> signInWithEmail({
-    required String email, // 📧 Email utilisateur
-    required String password, // 🔑 Mot de passe
+    required BuildContext context,
+    required String email,
+    required String password,
   }) async {
-    try {
-      logAuth("🚀 Connexion avec email : $email");
+    // Validate input
+    if (email.isEmpty || password.isEmpty) {
+      ErrorHandler.handleError(
+        context,
+        'Email or password cannot be empty.',
+        userMessage: 'Please enter a valid email and password.',
+        title: 'Input Error',
+      );
+      return null; // Return early if inputs are invalid
+    }
+
+    User? user;
+    await ErrorHandler.safeCall(context, () async {
+      logAuth("Connexion avec email : $email");
       final result = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      logAuth("✅ Connecté avec email : ${result.user?.uid}");
-      return result.user;
-    } catch (e) {
-      logAuth("❌ Erreur connexion email : $e");
-      return null;
-    }
+      user = result.user;
+      logAuth("Connecté avec email : ${user?.uid}");
+    }, errorMessage: "Échec de la connexion. Vérifiez vos identifiants.");
+
+    return user;
   }
 
-  /// 🔹 Création de compte avec email et mot de passe
+  /// Register a new account
   Future<User?> registerWithEmail({
-    required String email, // 📧 Email à enregistrer
-    required String password, // 🔑 Mot de passe
+    required BuildContext context,
+    required String email,
+    required String password,
   }) async {
-    try {
-      logAuth("📝 Création d’un compte pour : $email");
+    User? user;
+    await ErrorHandler.safeCall(context, () async {
+      logAuth("Création d’un compte pour : $email");
       final result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      logAuth("✅ Compte créé : ${result.user?.uid}");
-      return result.user;
-    } catch (e) {
-      logAuth("❌ Erreur création compte : $e");
-      return null;
-    }
+      user = result.user;
+      logAuth("Compte créé : ${user?.uid}");
+    }, errorMessage: "Échec de la création du compte.");
+    return user;
   }
 
-  /// 🔹 Déconnexion de l’utilisateur actuel
-  Future<void> signOut() async {
-    try {
-      logAuth("🚪 Déconnexion de ${_auth.currentUser?.uid}");
-      await _auth.signOut(); // 🔐 Déconnexion Firebase
-      logAuth("✅ Déconnecté !");
-    } catch (e) {
-      logAuth("❌ Erreur déconnexion : $e");
-    }
+  /// Sign out the current user
+  Future<void> signOut(BuildContext context) async {
+    await ErrorHandler.safeCall(context, () async {
+      final uid = _auth.currentUser?.uid;
+      logAuth("Déconnexion de $uid");
+      await _auth.signOut();
+      logAuth("Déconnecté !");
+    }, errorMessage: "Erreur lors de la déconnexion.");
   }
 }

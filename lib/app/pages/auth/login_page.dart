@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../services/firestore/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -8,6 +9,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final AuthService _authService = AuthService();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -97,16 +99,11 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         child: IconButton(
                           onPressed: () async {
-                            try {
-                              await FirebaseAuth.instance.signInWithEmailAndPassword(
+                              await _authService.signInWithEmail(
+                                context: context,
                                 email: emailController.text.trim(),
                                 password: passwordController.text.trim(),
                               );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Erreur de connexion : ${e.toString()}")),
-                              );
-                            }
                           },
                           icon: const Icon(Icons.login, size: 30, color: Colors.white),
                           padding: const EdgeInsets.all(16),
@@ -162,34 +159,24 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         child: IconButton(
                           onPressed: () async {
-                            try {
-                              await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                                email: emailController.text.trim(),
-                                password: passwordController.text.trim(),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Erreur création : ${e.toString()}")),
-                              );
-                            }
+                            await _authService.registerWithEmail(
+                              context: context,
+                              email: emailController.text.trim(),
+                              password: passwordController.text.trim(),
+                            );
                           },
-
                           icon: const Icon(Icons.person_add_alt_1, size: 30, color: Colors.white),
                           padding: const EdgeInsets.all(16),
                         ),
                       ),
                     ],
                   ),
-
-
-
                 ],
               ),
             ),
           ),
         ],
       ),
-
     );
   }
 }
