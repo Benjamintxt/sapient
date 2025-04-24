@@ -1,189 +1,199 @@
-// 📄 profile_page.dart
-// 👤 Page de profil utilisateur avec design floral/pastel + édition + stats
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'profile_editable_card.dart';
+import 'profile_static_card.dart';
+import 'profile_icon_card.dart';
+import 'edit_dialog.dart';
+import 'language_picker_dialog.dart';
+import 'package:sapient/app/pages/user/statistics/statistics_page.dart';
 
-import 'package:flutter/material.dart'; // 🎨 Composants UI
-import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 🌍 Traductions multilingues
-import 'profile_editable_card.dart'; // ✏️ Carte modifiable
-import 'profile_static_card.dart'; // 🔒 Carte statique
-import 'profile_icon_card.dart'; // 🌐 Carte avec icône
-import 'edit_dialog.dart'; // 📝 Dialogue d'édition
-import 'language_picker_dialog.dart'; // 🌍 Dialogue choix de langue
-import 'package:sapient/app/pages/user/statistics/statistics_page.dart'; // 📊 Page des stats
-
-// 🟣 Activation des logs de debug pour la page profil
 const bool kEnableProfileLogs = false;
 
-// 🖨️ Fonction utilitaire pour afficher les logs si activé
 void logProfile(String message) {
   if (kEnableProfileLogs) print("[👤 ProfilePage] $message");
 }
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key}); // 🔑 Constructeur avec clé optionnelle
+  const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState(); // 🧠 Création de l'état
+  State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final String userEmail = 'example@example.com'; // 📧 Email de l'utilisateur (exemple statique)
-  final String userName = 'John Doe'; // 👤 Nom utilisateur (statique)
-  final String userObjectives = 'Apprendre Flutter et Dart'; // 🎯 Objectifs (statique)
+  String? _userEmail;
+  String _userName = '';
+  String _userObjectives = '';
+  bool _isLoading = true;
+  final String? _uid = FirebaseAuth.instance.currentUser?.uid;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserEmail();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserEmail() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        _userEmail = user.email;
+      });
+    }
+  }
+
+  Future<void> _fetchUserData() async {
+    if (_uid != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(_uid).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        setState(() {
+          _userName = data['name'] ?? '';
+          _userObjectives = data['learningGoals'] ?? '';
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _updateField(String field, String newValue) async {
+    if (_uid != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_uid)
+            .set({field: newValue}, SetOptions(merge: true));
+
+        setState(() {
+          if (field == 'name') {
+            _userName = newValue;
+          } else if (field == 'learningGoals') {
+            _userObjectives = newValue;
+          }
+        });
+      } catch (e) {
+        print('Error updating $field: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final local = AppLocalizations.of(context)!; // 🌍 Chargement des traductions
+    final local = AppLocalizations.of(context)!;
 
-    logProfile("🧱 Construction de la page profil");
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
-      extendBodyBehindAppBar: true, // 🪟 Fond visible sous la barre d'app
-      backgroundColor: Colors.transparent, // 🎨 Fond transparent pour laisser voir l'image
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // 🌸 Image de fond pastel
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/Screen profil.png', // 🖼️ Image à afficher
-              fit: BoxFit.cover, // 🔳 Remplir tout l'écran
-            ),
+            child: Image.asset('assets/images/Screen profil.png', fit: BoxFit.cover),
           ),
-
-          // 🌫️ Voile blanc pour lisibilité du texte
           Positioned.fill(
             child: Container(color: Colors.white.withAlpha(38)),
           ),
-
-          // 🔙 Bouton retour (en haut à gauche)
           Positioned(
-            top: 55, // ↕️ Distance depuis le haut
-            left: 16, // ↔️ Distance depuis la gauche
+            top: 55,
+            left: 16,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF4A148C), size: 28), // 🎨 Icône flèche violette
-              onPressed: () {
-                logProfile("🔙 Retour arrière (Navigator.pop)");
-                Navigator.pop(context); // 🔙 Revenir en arrière
-              },
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF4A148C), size: 28),
+              onPressed: () => Navigator.pop(context),
             ),
           ),
-
-          // 🏷️ Titre centré "Profil"
           Positioned(
             top: 50,
             left: 0,
             right: 0,
             child: Center(
               child: Text(
-                local.profile, // 🌍 Traduction du mot "Profil"
+                local.profile,
                 style: const TextStyle(
-                  fontSize: 32, // 🔠 Taille du titre
-                  fontWeight: FontWeight.bold, // 🅱️ Gras
-                  color: Color(0xFF4A148C), // 🎨 Couleur violette
-                  fontFamily: 'Raleway', // ✏️ Police personnalisée
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4A148C),
+                  fontFamily: 'Raleway',
                   shadows: [
-                    Shadow(blurRadius: 3, color: Colors.black26, offset: Offset(1, 2)), // 🌫️ Effet d'ombre
+                    Shadow(blurRadius: 3, color: Colors.black26, offset: Offset(1, 2)),
                   ],
                 ),
               ),
             ),
           ),
-
-          // 🧱 Contenu principal
           Positioned.fill(
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20), // 🧱 Marges
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center, // ↔️ Centrage horizontal
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // 👤 Icône de profil (avatar)
                     CircleAvatar(
-                      radius: 48, // ⚪ Taille du cercle
-                      backgroundColor: Colors.deepPurple.shade100, // 🎨 Violet clair
-                      child: const Icon(Icons.person, size: 48, color: Colors.deepPurple), // 👤 Icône au centre
+                      radius: 48,
+                      backgroundColor: Colors.deepPurple.shade100,
+                      child: const Icon(Icons.person, size: 48, color: Colors.deepPurple),
                     ),
-
-                    const SizedBox(height: 32), // ↕️ Espace
-
-                    // ✏️ Carte modifiable : nom
+                    const SizedBox(height: 32),
                     ProfileEditableCard(
-                      label: local.profile_name, // 🏷️ "Nom"
-                      value: userName, // 🔠 Valeur du nom
+                      label: local.profile_name,
+                      value: _userName,
                       onEdit: () {
-                        logProfile("✏️ Édition du nom déclenchée");
                         showEditDialog(
                           context: context,
                           field: 'name',
-                          currentValue: userName,
-                          onSave: (newValue) {
-                            logProfile("💾 Nom modifié en : $newValue");
-                            setState(() {
-                              // TODO: enregistrer le nouveau nom
-                            });
-                          },
+                          currentValue: _userName,
+                          onSave: (newValue) => _updateField('name', newValue),
                         );
                       },
                     ),
-
                     const SizedBox(height: 12),
-
-                    // 🔒 Carte statique : email
                     ProfileStaticCard(
-                      label: local.profile_email, // 🏷️ "Email"
-                      value: userEmail,
+                      label: local.profile_email,
+                      value: _userEmail ?? local.emailNotAvailable,
                     ),
-
                     const SizedBox(height: 12),
-
-                    // ✏️ Carte modifiable : objectifs
                     ProfileEditableCard(
-                      label: local.learning_objectives, // 🏷️ "Objectifs"
-                      value: userObjectives,
+                      label: local.learning_objectives,
+                      value: _userObjectives,
                       onEdit: () {
-                        logProfile("🎯 Édition des objectifs déclenchée");
                         showEditDialog(
                           context: context,
-                          field: 'objectives',
-                          currentValue: userObjectives,
-                          onSave: (newValue) {
-                            logProfile("💾 Objectifs modifiés en : $newValue");
-                            setState(() {
-                              // TODO: enregistrer les objectifs
-                            });
-                          },
+                          field: 'learningGoals',
+                          currentValue: _userObjectives,
+                          onSave: (newValue) => _updateField('learningGoals', newValue),
                         );
                       },
                     ),
-
                     const SizedBox(height: 12),
-
-                    // 🌐 Carte langue avec icône
                     ProfileIconCard(
                       label: local.change_language,
-                      icon: Icons.language, // 🌍 Icône
-                      onTap: () {
-                        logProfile("🌍 Ouverture du sélecteur de langue");
-                        _showLanguagePickerDialog(context); // 📤 Affiche le dialogue
-                      },
+                      icon: Icons.language,
+                      onTap: () => _showLanguagePickerDialog(context),
                     ),
-
-                    const Spacer(), // 📏 Pousse le bouton vers le bas
-
-                    // 📊 Bouton stats centré en bas
+                    const Spacer(),
                     Center(
                       child: FloatingActionButton(
-                        heroTag: 'stats_btn', // 🏷️ ID unique
-                        backgroundColor: Colors.deepPurple, // 🎨 Violet
+                        heroTag: 'stats_btn',
+                        backgroundColor: Colors.deepPurple,
                         onPressed: () {
-                          logProfile("📊 Navigation vers StatisticsPage");
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => const StatisticsPage()), // 📊 Ouvre la page des statistiques
+                            MaterialPageRoute(builder: (context) => const StatisticsPage()),
                           );
                         },
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // 🟣 Coins arrondis
-                        child: const Icon(Icons.bar_chart, color: Colors.white), // 📊 Icône
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: const Icon(Icons.bar_chart, color: Colors.white),
                       ),
                     ),
                   ],
@@ -196,7 +206,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  /// 🌍 Ouvre le dialogue pour changer la langue
   void _showLanguagePickerDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -204,3 +213,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+
+  void _showLanguagePickerDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => const LanguagePickerDialog(),
+    );
+  }
