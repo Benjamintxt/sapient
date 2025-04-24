@@ -124,7 +124,7 @@ class SubjectPage extends StatelessWidget {
     );
   }
 
-  // ⚙️ Boutons d'action : ajouter, profil, stats, déconnexion
+  // ⚙️ Boutons d'action : ajouter, profil, stats
   Widget _buildBottomButtons(BuildContext context) {
     return Positioned(
       bottom: 20,
@@ -172,28 +172,6 @@ class SubjectPage extends StatelessWidget {
             },
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: const Icon(Icons.emoji_events, color: Colors.white),
-          ),
-
-          // 🚪 Déconnexion
-          FloatingActionButton(
-            heroTag: "logout_button",
-            backgroundColor: Colors.deepPurple,
-            onPressed: () async {
-              final shouldLogout = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text("Se déconnecter ?"),
-                  content: const Text("Es-tu sûr(e) de vouloir te déconnecter ?"),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Annuler")),
-                    ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text("Déconnexion")),
-                  ],
-                ),
-              );
-              if (shouldLogout == true) await FirebaseAuth.instance.signOut();
-            },
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: const Icon(Icons.logout, color: Colors.white),
           ),
         ],
       ),

@@ -182,19 +182,54 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: () => _showLanguagePickerDialog(context),
                     ),
                     const Spacer(),
-                    Center(
-                      child: FloatingActionButton(
-                        heroTag: 'stats_btn',
-                        backgroundColor: Colors.deepPurple,
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const StatisticsPage()),
-                          );
-                        },
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: const Icon(Icons.bar_chart, color: Colors.white),
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        FloatingActionButton(
+                          heroTag: 'stats_btn',
+                          backgroundColor: Colors.deepPurple,
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const StatisticsPage()),
+                            );
+                          },
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          child: const Icon(Icons.bar_chart, color: Colors.white),
+                        ),
+                        FloatingActionButton(
+                          heroTag: "logout_button",
+                          backgroundColor: Colors.deepPurple,
+                          onPressed: () async {
+                            final shouldLogout = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text("Se déconnecter ?"),
+                                content: const Text("Es-tu sûr(e) de vouloir te déconnecter ?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text("Annuler"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    child: const Text("Déconnexion"),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (shouldLogout == true) {
+                              await FirebaseAuth.instance.signOut();
+                              if (context.mounted) {
+                                Navigator.pop(context); // Pop the ProfilePage
+                              }
+                            }
+                          },
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          child: const Icon(Icons.logout, color: Colors.white),
+                        ),
+                      ],
                     ),
                   ],
                 ),
