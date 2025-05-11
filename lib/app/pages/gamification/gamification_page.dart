@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sapient/app/pages/gamification/controller/gamification_controller.dart';
 import 'package:sapient/app/pages/gamification/model/plant_stages_data.dart';
-import 'package:sapient/app/pages/gamification/widgets/plant_content.dart'; // 🌿 Ton widget avec barre et bouton
+import 'package:sapient/app/pages/gamification/widgets/plant_content.dart'; //  Ton widget avec barre et bouton
 
 class GamificationPage extends StatelessWidget {
   const GamificationPage({super.key});
@@ -28,9 +28,9 @@ class _GamificationFullBackground extends StatelessWidget {
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          _buildBackground(stage),              // 🌄 Image de fond
-          const Positioned.fill(child: PlantContent()), // 🌿 Contenu au-dessus
-          Positioned(                           // 🔙 Bouton retour
+          _buildBackground(stage),              //  Image de fond
+          const Positioned.fill(child: PlantContent()), //  Contenu au-dessus
+          Positioned(                           // Bouton retour
             top: 55,
             left: 16,
             child: IconButton(

@@ -24,7 +24,7 @@ class GamificationController extends ChangeNotifier {
 
   void gainXp(int amount) {
     _xp += amount;
-    print("🧠 [Gamification] XP actuel : $_xp (→ ${currentStage.name})");
+    print("[Gamification] XP actuel : $_xp (→ ${currentStage.name})");
     notifyListeners();
   }
 

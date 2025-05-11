@@ -1,5 +1,5 @@
-// 📄 edit_flashcard_page.dart
-// 📝 Page de modification d'une flashcard (texte ou image)
+// edit_flashcard_page.dart
+// Page de modification d'une flashcard (texte ou image)
 
 
 import 'package:flutter/material.dart'; // 🎨 UI Flutter
@@ -10,26 +10,26 @@ import 'package:sapient/app/pages/utils/camera_page.dart'; // 📷 Page de captu
 
 
 import 'edit_flashcard_image_viewer.dart'; // 🖼️ Visualiseur d’image dynamique
-import 'edit_flashcard_action_buttons.dart'; // 🔘 Boutons actions édition (valider, changer côté, etc.)
+import 'edit_flashcard_action_buttons.dart'; // Boutons actions édition (valider, changer côté, etc.)
 
-// ✅ Constante pour activer/désactiver les logs dans cette page
+// Constante pour activer/désactiver les logs dans cette page
 const bool kEnableEditLogs = false;
 
-/// 🖨️ Fonction de log centralisée pour l’édition
+/// 🖨Fonction de log centralisée pour l’édition
 void logEdit(String message) {
   if (kEnableEditLogs) print('[EditPage] $message');
 }
 
 class EditFlashcardPage extends StatefulWidget {
-  final String initialFront; // 🧠 Texte initial recto
-  final String initialBack; // 🧠 Texte initial verso
-  final String flashcardId; // 🆔 ID de la flashcard
-  final String subjectId; // 📁 ID du sujet associé
-  final String userId; // 👤 Utilisateur connecté
-  final int level; // 🔢 Niveau hiérarchique
-  final List<String>? parentPathIds; // 🧭 Chemin Firestore complet
-  final String? imageFrontUrl; // 🖼️ URL image recto (optionnel)
-  final String? imageBackUrl; // 🖼️ URL image verso (optionnel)
+  final String initialFront; // Texte initial recto
+  final String initialBack; // Texte initial verso
+  final String flashcardId; // ID de la flashcard
+  final String subjectId; // ID du sujet associé
+  final String userId; // Utilisateur connecté
+  final int level; // Niveau hiérarchique
+  final List<String>? parentPathIds; // Chemin Firestore complet
+  final String? imageFrontUrl; // URL image recto (optionnel)
+  final String? imageBackUrl; // URL image verso (optionnel)
 
   const EditFlashcardPage({
     super.key,
@@ -49,32 +49,32 @@ class EditFlashcardPage extends StatefulWidget {
 }
 
 class _EditFlashcardPageState extends State<EditFlashcardPage> {
-  late TextEditingController _controller; // 🎮 Contrôle le texte édité
-  bool isEditingFront = true; // 🔄 Suivi du côté en édition (texte)
-  late String editedFront; // 🧠 Nouveau recto
-  late String editedBack; // 🧠 Nouveau verso
-  String? editedImageFront; // 📷 Nouvelle image recto (URL Firebase)
-  String? editedImageBack; // 📷 Nouvelle image verso
-  bool showFront = true; // 👁️ Vue actuelle (recto ou verso)
+  late TextEditingController _controller; // Contrôle le texte édité
+  bool isEditingFront = true; // Suivi du côté en édition (texte)
+  late String editedFront; // Nouveau recto
+  late String editedBack; // Nouveau verso
+  String? editedImageFront; // Nouvelle image recto (URL Firebase)
+  String? editedImageBack; // Nouvelle image verso
+  bool showFront = true; // 👁Vue actuelle (recto ou verso)
 
-  // 📌 Détermine si la carte est de type image ou texte
+  // Détermine si la carte est de type image ou texte
   bool get isImageFlashcard =>
       (editedImageFront != null && editedImageFront!.isNotEmpty) ||
           (editedImageBack != null && editedImageBack!.isNotEmpty);
   @override
   void initState() {
     super.initState();
-    logEdit("🔄 Initialisation de la page d’édition");
+    logEdit("Initialisation de la page d’édition");
 
-    // 🧠 Récupération initiale des textes
+    // Récupération initiale des textes
     editedFront = widget.initialFront;
     editedBack = widget.initialBack;
 
-    // 🖼️ Récupération initiale des images
+    // Récupération initiale des images
     editedImageFront = widget.imageFrontUrl;
     editedImageBack = widget.imageBackUrl;
 
-    // 🔧 Sécurité : remet à null si ce sont des chaînes vides
+    // Sécurité : remet à null si ce sont des chaînes vides
     if ((editedImageFront == null || editedImageFront!.isEmpty) &&
         (editedImageBack == null || editedImageBack!.isEmpty)) {
       editedImageFront = null;
@@ -85,31 +85,31 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
     _controller = TextEditingController(text: editedFront);
   }
 
-  /// 🔁 Change le côté affiché ou édité
+  /// Change le côté affiché ou édité
   void _switchSide(bool toFront) {
-    logEdit("🔃 Changement de côté vers ${toFront ? 'recto' : 'verso'}");
+    logEdit("Changement de côté vers ${toFront ? 'recto' : 'verso'}");
     setState(() {
       if (isImageFlashcard) {
-        logEdit("🖼️ Passage image - affichage uniquement");
+        logEdit("Passage image - affichage uniquement");
         showFront = toFront; // 📷 Affichage uniquement
       } else {
-        logEdit("✏️ Passage texte - changement de côté avec champ texte");
-        // 📝 Sauvegarde temporaire du texte avant de changer
+        logEdit("Passage texte - changement de côté avec champ texte");
+        // Sauvegarde temporaire du texte avant de changer
         if (isEditingFront) editedFront = _controller.text;
         else editedBack = _controller.text;
 
-        isEditingFront = toFront; // 🧭 Mise à jour de l'état
-        _controller.text = isEditingFront ? editedFront : editedBack; // 🖋️ Met à jour le champ
+        isEditingFront = toFront; // Mise à jour de l'état
+        _controller.text = isEditingFront ? editedFront : editedBack; // Met à jour le champ
         _controller.selection = TextSelection.fromPosition(
-          TextPosition(offset: _controller.text.length), // 🔚 Curseur à la fin
+          TextPosition(offset: _controller.text.length), // Curseur à la fin
         );
       }
     });
   }
 
-  /// 📷 Lance la caméra et enregistre l’image dans Firebase Storage
+  /// Lance la caméra et enregistre l’image dans Firebase Storage
   Future<void> _captureImageForSide(bool forFront) async {
-    logEdit("📷 Capture d'image pour le côté : ${forFront ? 'recto' : 'verso'}");
+    logEdit(" Capture d'image pour le côté : ${forFront ? 'recto' : 'verso'}");
     final image = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const CameraPage()),
@@ -130,13 +130,13 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
           showFront = false;
         }
       });
-      logEdit("✅ Image mise à jour → isImageFlashcard = $isImageFlashcard");
+      logEdit(" Image mise à jour → isImageFlashcard = $isImageFlashcard");
     }
   }
 
-  /// 💾 Sauvegarde les modifications dans Firestore
+  /// Sauvegarde les modifications dans Firestore
   Future<void> _saveChanges() async {
-    FocusScope.of(context).unfocus(); // ✅ Ferme le clavier
+    FocusScope.of(context).unfocus(); // Ferme le clavier
     logEdit("💾 Tentative de sauvegarde des modifications");
     if (!isImageFlashcard) {
       if (isEditingFront) editedFront = _controller.text;
@@ -158,10 +158,10 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
         imageBackUrl: editedImageBack,
       );
 
-      logEdit("✅ Sauvegarde réussie");
+      logEdit(" Sauvegarde réussie");
       Navigator.pop(context);
     } catch (e) {
-      logEdit("❌ Erreur de sauvegarde : $e");
+      logEdit(" Erreur de sauvegarde : $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Erreur lors de la sauvegarde : $e")),
       );
@@ -171,24 +171,24 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, // 📱 Permet à la vue de se redimensionner quand le clavier apparaît
-      extendBodyBehindAppBar: true, // 🌫️ Étend le fond derrière la barre supérieure (effet visuel doux)
-      backgroundColor: Colors.transparent, // 🔍 Fond transparent pour laisser passer l’image en-dessous
+      resizeToAvoidBottomInset: true, // Permet à la vue de se redimensionner quand le clavier apparaît
+      extendBodyBehindAppBar: true, // 🌫Étend le fond derrière la barre supérieure (effet visuel doux)
+      backgroundColor: Colors.transparent, // Fond transparent pour laisser passer l’image en-dessous
 
-      body: Stack( // 📚 Superpose plusieurs éléments graphiques
+      body: Stack( // Superpose plusieurs éléments graphiques
         children: [
-          // 🌸 Image de fond principale (vue pastel avec bonsaï)
+          // Image de fond principale (vue pastel avec bonsaï)
           Positioned.fill(
             child: Image.asset(
-              'assets/images/FlashCard View.png', // 📁 Chemin de l’image de fond
-              fit: BoxFit.cover, // 🧩 Ajuste l’image pour couvrir tout l’espace
+              'assets/images/FlashCard View.png', // Chemin de l’image de fond
+              fit: BoxFit.cover, // Ajuste l’image pour couvrir tout l’espace
             ),
           ),
 
-          // 🌫️ Voile blanc semi-transparent au-dessus de l’image pour lisibilité
+          // 🌫Voile blanc semi-transparent au-dessus de l’image pour lisibilité
           Positioned.fill(
             child: Container(
-              color: Colors.white.withAlpha(26),  // 🎨 Opacité légère
+              color: Colors.white.withAlpha(26),  // Opacité légère
             ),
           ),
 
@@ -197,33 +197,33 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
             top: 55,
             left: 16,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF4A148C), size: 28), // 🎨 Couleur violette
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF4A148C), size: 28), // Couleur violette
               onPressed: () {
-                logEdit("🔙 Retour en arrière depuis la page d’édition");
-                Navigator.pop(context); // 🔚 Ferme la page
+                logEdit(" Retour en arrière depuis la page d’édition");
+                Navigator.pop(context); // Ferme la page
               },
             ),
           ),
 
 
-          // 🏷️ Titre centré "Modifier la flashcard"
+          // Titre centré "Modifier la flashcard"
           Positioned(
-            top: 50, // ↕️ Position verticale à 50 pixels du haut
-            left: 0, // ↔️ Prend toute la largeur
+            top: 50, // Position verticale à 50 pixels du haut
+            left: 0, // Prend toute la largeur
             right: 0,
             child: Center(
               child: Text(
-                AppLocalizations.of(context)!.editFlashcard, // 🌍 Texte localisé "Modifier la flashcard"
+                AppLocalizations.of(context)!.editFlashcard, // Texte localisé "Modifier la flashcard"
                 style: const TextStyle(
                   fontSize: 32, // 🔠 Taille du texte
-                  fontWeight: FontWeight.bold, // 🅱️ Texte en gras
-                  color: Color(0xFF4A148C), // 🎨 Couleur violette profonde (cohérente avec le thème)
-                  fontFamily: 'Raleway', // ✏️ Police personnalisée
+                  fontWeight: FontWeight.bold, // Texte en gras
+                  color: Color(0xFF4A148C), // Couleur violette profonde (cohérente avec le thème)
+                  fontFamily: 'Raleway', // Police personnalisée
                   shadows: [
                     Shadow(
-                      blurRadius: 3, // 💫 Effet de flou léger
-                      color: Colors.black26, // 🌑 Ombre noire avec opacité
-                      offset: Offset(1, 2), // ↘️ Décalage léger vers le bas et à droite
+                      blurRadius: 3, // Effet de flou léger
+                      color: Colors.black26, // Ombre noire avec opacité
+                      offset: Offset(1, 2), // Décalage léger vers le bas et à droite
                     ),
                   ],
                 ),
@@ -231,23 +231,23 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
             ),
           ),
 
-          // 📦 Contenu principal (champ de texte ou image + boutons)
+          // Contenu principal (champ de texte ou image + boutons)
           Positioned.fill(
             child: SingleChildScrollView(
               padding: EdgeInsets.only(
-                top: 250, // ↕️ Espace depuis le haut pour ne pas masquer le titre
-                left: 24, // ⬅️ Marge à gauche
-                right: 24, // ➡️ Marge à droite
-                bottom: MediaQuery.of(context).viewInsets.bottom + 40, // 🔽 Ajuste le bas selon le clavier
+                top: 250, // Espace depuis le haut pour ne pas masquer le titre
+                left: 24, // Marge à gauche
+                right: 24, // Marge à droite
+                bottom: MediaQuery.of(context).viewInsets.bottom + 40, // Ajuste le bas selon le clavier
               ),
               child: Column(
                 children: [
-                  // 📝 Affichage du champ texte si la flashcard est textuelle uniquement
+                  // Affichage du champ texte si la flashcard est textuelle uniquement
                   if (!isImageFlashcard)
                     ConstrainedBox(
                       constraints: const BoxConstraints(
-                        minHeight: 200, // 📏 Hauteur minimale
-                        maxHeight: 400, // 📏 Hauteur maximale pour limiter l’expansion
+                        minHeight: 200, // Hauteur minimale
+                        maxHeight: 400, // Hauteur maximale pour limiter l’expansion
                       ),
                       child: Container(
                         padding: const EdgeInsets.all(12),
@@ -264,16 +264,16 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
                           ],
                         ),
                         child: TextField(
-                          controller: _controller, // 📝 Contrôle le texte
-                          maxLines: null, // ↕️ Permet plusieurs lignes
-                          expands: true, // 📦 Remplit toute la hauteur disponible
-                          textAlign: TextAlign.center, // ⬅️➡️ Centre horizontalement
-                          textAlignVertical: TextAlignVertical.center, // ⬆️⬇️ Centre verticalement
-                          style: const TextStyle(fontSize: 22), // 🔠 Taille du texte
+                          controller: _controller, // Contrôle le texte
+                          maxLines: null, // Permet plusieurs lignes
+                          expands: true, // Remplit toute la hauteur disponible
+                          textAlign: TextAlign.center, //  Centre horizontalement
+                          textAlignVertical: TextAlignVertical.center, //  Centre verticalement
+                          style: const TextStyle(fontSize: 22), // Taille du texte
                           decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20), // 🧱 Espace intérieur
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20), // Espace intérieur
                             filled: true,
-                            fillColor: Colors.white, // 🎨 Fond blanc
+                            fillColor: Colors.white, // Fond blanc
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
@@ -286,21 +286,21 @@ class _EditFlashcardPageState extends State<EditFlashcardPage> {
 
 
 
-                  // 📷 Affichage de l’image si c’est une flashcard avec image (recto/verso)
+                  // Affichage de l’image si c’est une flashcard avec image (recto/verso)
                   if (isImageFlashcard)
                     EditFlashcardImageViewer(
-                      imageUrl: showFront ? editedImageFront : editedImageBack, // 👁️ Affiche recto ou verso selon l’état
-                      onTap: () => setState(() => showFront = !showFront), // 🔄 Inverse la face affichée au clic
+                      imageUrl: showFront ? editedImageFront : editedImageBack, //  Affiche recto ou verso selon l’état
+                      onTap: () => setState(() => showFront = !showFront), // Inverse la face affichée au clic
                     ),
 
-                  const SizedBox(height: 40), // 🧱 Espace vertical entre le contenu et les boutons
+                  const SizedBox(height: 40), // Espace vertical entre le contenu et les boutons
 
-                  // 🧩 Ligne des boutons : voir recto/verso, capturer image, valider
+                  // Ligne des boutons : voir recto/verso, capturer image, valider
                   EditFlashcardActionButtons(
-                    isImageFlashcard: isImageFlashcard, // ✅ S’adapte selon le type de flashcard
-                    onSwitchSide: _switchSide, // 🔄 Fonction de changement de face
-                    onCaptureImage: _captureImageForSide, // 📷 Fonction pour lancer la caméra
-                    onSave: _saveChanges, // 💾 Fonction de sauvegarde finale
+                    isImageFlashcard: isImageFlashcard, // S’adapte selon le type de flashcard
+                    onSwitchSide: _switchSide, // Fonction de changement de face
+                    onCaptureImage: _captureImageForSide, // Fonction pour lancer la caméra
+                    onSave: _saveChanges, // Fonction de sauvegarde finale
                   ),
                 ],
               ),

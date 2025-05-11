@@ -1,57 +1,57 @@
-// 📁 review_answer_buttons.dart
-// Boutons de réponse à une flashcard pendant la révision (✅ Bonne réponse, ❌ Mauvaise réponse)
+// review_answer_buttons.dart
+// Boutons de réponse à une flashcard pendant la révision (Bonne réponse, Mauvaise réponse)
 
-import 'package:flutter/material.dart'; // 🎨 UI Flutter
+import 'package:flutter/material.dart'; // UI Flutter
 
-// 🟢 Constante pour activer ou désactiver les logs
+// Constante pour activer ou désactiver les logs
 const bool kEnableReviewLogs = false;
 
-/// 🖨️ Fonction utilitaire pour afficher les logs si activés
+///  Fonction utilitaire pour afficher les logs si activés
 void logReview(String message) {
-  if (kEnableReviewLogs) print(message); // ✅ Affiche uniquement si les logs sont activés
+  if (kEnableReviewLogs) print(message); // Affiche uniquement si les logs sont activés
 }
 
-/// 🔘 Boutons pour répondre à une flashcard pendant la révision
+/// Boutons pour répondre à une flashcard pendant la révision
 ///
-/// Affiche deux boutons flottants : "mauvaise réponse" (❌) et "bonne réponse" (✅).
+/// Affiche deux boutons flottants : "mauvaise réponse" () et "bonne réponse" ().
 /// Lorsqu'un bouton est cliqué, appelle la fonction `onAnswer(bool)` passée en paramètre.
 class ReviewAnswerButtons extends StatelessWidget {
-  final void Function(bool isCorrect) onAnswer; // ✅ Fonction appelée avec true (✔️) ou false (❌)
+  final void Function(bool isCorrect) onAnswer; // Fonction appelée avec true ou false
 
   const ReviewAnswerButtons({
-    required this.onAnswer, // 📥 Fonction callback pour enregistrer la réponse
-    super.key, // 🗝️ Clé Flutter (optionnelle)
+    required this.onAnswer, // Fonction callback pour enregistrer la réponse
+    super.key, // Clé Flutter (optionnelle)
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center, // 🎯 Centrage horizontal
+      mainAxisAlignment: MainAxisAlignment.center, // Centrage horizontal
       children: [
-        // ❌ Bouton "mauvaise réponse"
+        // Bouton "mauvaise réponse"
         FloatingActionButton(
-          heroTag: 'fail_button', // 🏷️ Identifiant unique (évite les conflits d’animation)
+          heroTag: 'fail_button', // Identifiant unique (évite les conflits d’animation)
           onPressed: () {
-            logReview("❌ [ReviewAnswerButtons] Bouton mauvaise réponse cliqué");
-            onAnswer(false); // 📥 Envoie false si mauvaise réponse
+            logReview("[ReviewAnswerButtons] Bouton mauvaise réponse cliqué");
+            onAnswer(false); // Envoie false si mauvaise réponse
           },
-          backgroundColor: Colors.deepPurple, // 🎨 Couleur du bouton
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // ⤴️ Coins arrondis
-          child: const Icon(Icons.close, color: Colors.white), // ❌ Icône croix
+          backgroundColor: Colors.deepPurple, // Couleur du bouton
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Coins arrondis
+          child: const Icon(Icons.close, color: Colors.white), // Icône croix
         ),
 
-        const SizedBox(width: 40), // ↔️ Espacement entre les deux boutons
+        const SizedBox(width: 40), //  Espacement entre les deux boutons
 
-        // ✅ Bouton "bonne réponse"
+        // Bouton "bonne réponse"
         FloatingActionButton(
-          heroTag: 'success_button', // 🏷️ Identifiant unique
+          heroTag: 'success_button', // Identifiant unique
           onPressed: () {
-            logReview("✅ [ReviewAnswerButtons] Bouton bonne réponse cliqué");
-            onAnswer(true); // 📥 Envoie true si bonne réponse
+            logReview("[ReviewAnswerButtons] Bouton bonne réponse cliqué");
+            onAnswer(true); // Envoie true si bonne réponse
           },
           backgroundColor: Colors.deepPurple,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: const Icon(Icons.check, color: Colors.white), // ✔️ Icône check
+          child: const Icon(Icons.check, color: Colors.white), // Icône check
         ),
       ],
     );
