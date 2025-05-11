@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sapient/app/pages/utils/error_handler.dart';
 
-const bool kEnableAuthLogs = true;
+const bool kEnableAuthLogs = false;
 
 void logAuth(String message) {
   if (kEnableAuthLogs) print(message);

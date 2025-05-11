@@ -84,6 +84,9 @@ class SubjectTile extends StatelessWidget {
                 // Exemple : [id1, id2] + id3 => [id1, id2, id3]
                 final updatedPath = [...parentPathIds, subjectId];
 
+                // 📝 Nouveau log pour vérifier updatedPath
+                logTile("🗺️ Chemin mis à jour : $updatedPath");
+
                 // 🔀 Cas 1 : Si le sujet est une catégorie et qu'on n'a pas atteint la profondeur maximale (5 niveaux)
                 if (isCategory && level < 5) {
                   logTile("📂 Ouvre sous-sujets de $subjectName (niveau ${level + 1})");
@@ -109,7 +112,7 @@ class SubjectTile extends StatelessWidget {
                       builder: (_) => FlashcardPage( // 🧠 Destination : page des flashcards
                         subjectId: subjectId, // 📁 ID du sujet (dernier élément cliqué)
                         userId: FirestoreCore.getCurrentUserUid() ?? '', // 👤 UID de l’utilisateur actuel (récupéré via FirestoreCore)
-                        level: level + 1, // 🔼 INCRÉMENTATION : on descend d’un niveau hiérarchique (ex: subsubject2)
+                        level: level, // 🔼 INCRÉMENTATION : on descend d’un niveau hiérarchique (ex: subsubject2)
                         parentPathIds: updatedPath, // 🧭 Nouveau chemin : liste complète des IDs parents (mis à jour avec le sujet actuel)
                       ),
                     ),

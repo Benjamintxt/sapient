@@ -3,7 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart'; // 📦 Firestore pour accéder à la base de données
 import 'core.dart'; // 🧩 Accès au FirestoreCore (depuis le même dossier)
 
-const bool kEnableLogs = true; // ✅ Mettre à false pour désactiver tous les print() de ce fichier
+const bool kEnableLogs = false; // ✅ Mettre à false pour désactiver tous les print() de ce fichier
 
 void log(String message) {
   if (kEnableLogs) print(message);
@@ -83,8 +83,8 @@ class FirestoreNavigationService {
     log("🛠️ [ensureLevelDocument] → levelKey=$levelKey | docId=$docId | name=$subjectName");
 
     final DocumentReference docRef = parentRef
-      .collection(levelKey) // 📁 Accès à la sous-collection cible
-      .doc(docId); // 📄 Document ciblé (créé ou mis à jour)
+        .collection(levelKey) // 📁 Accès à la sous-collection cible
+        .doc(docId); // 📄 Document ciblé (créé ou mis à jour)
     log("📄 Cible : ${docRef.path}");
 
 // 🔍 On essaie de récupérer le champ isCategory à partir du document original dans la base "subjects"

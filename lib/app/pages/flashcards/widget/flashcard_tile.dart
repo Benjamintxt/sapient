@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart'; // 🎨 UI Flutter
 
 // 🔧 Constante de debug (active ou non les logs console)
-const bool kEnableFlashcardTileLogs = true;
+const bool kEnableFlashcardTileLogs = false;
 
 /// 📢 Fonction de log conditionnelle pour FlashcardTile
 void logFlashcardTile(String msg) {

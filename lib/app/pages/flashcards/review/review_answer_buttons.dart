@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart'; // 🎨 UI Flutter
 
 // 🟢 Constante pour activer ou désactiver les logs
-const bool kEnableReviewLogs = true;
+const bool kEnableReviewLogs = false;
 
 /// 🖨️ Fonction utilitaire pour afficher les logs si activés
 void logReview(String message) {

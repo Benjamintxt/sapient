@@ -8,7 +8,7 @@ import 'navigation_service.dart'; // 🗭 Service de navigation hiérarchique da
 
 import 'subjects_service.dart'; // 📚 Pour accéder aux noms des sujets
 
-const bool kEnableRevisionsLogs = true; // ✅ Active les logs debug pour les révisions
+const bool kEnableRevisionsLogs = false; // ✅ Active les logs debug pour les révisions
 
 /// 📢 Fonction de log conditionnelle pour le service de révision
 void logRevisions(String message) {

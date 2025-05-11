@@ -9,7 +9,7 @@ import 'package:uuid/uuid.dart'; // 🔑 Générateur d'identifiants uniques
 import 'core.dart'; // 🧩 Accès au FirestoreCore (singleton)
 import 'navigation_service.dart'; // 🧭 Navigation dans la hiérarchie Firestore
 
-const bool kEnableFlashcardsLogs = true; // ✅ Activer/désactiver les logs de debug flashcards
+const bool kEnableFlashcardsLogs = false; // ✅ Activer/désactiver les logs de debug flashcards
 
 /// 🖨️ Méthode de log dédiée aux flashcards (affiche seulement si activé)
 void logFlashcards(String message) {
@@ -135,9 +135,13 @@ class FirestoreFlashcardsService {
     if (imageFrontUrl != null) update['imageFrontUrl'] = imageFrontUrl;
     if (imageBackUrl != null) update['imageBackUrl'] = imageBackUrl;
 
+    // 🧪 Log du chemin de la mise à jour
+    logFlashcards("📍 Chemin complet : ${docRef.path}/flashcards/$flashcardId");
+    logFlashcards("📤 Tentative de update() lancée");
     // 💾 Mise à jour du document Firestore
     await docRef.collection('flashcards').doc(flashcardId).update(update);
     logFlashcards("✅ Mise à jour : ${docRef.path}/flashcards/$flashcardId");
+    logFlashcards("✅ update() réussie");
   }
 
   /// 🔹 Supprime une flashcard et ses images si elles existent

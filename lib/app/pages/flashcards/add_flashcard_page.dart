@@ -5,7 +5,7 @@ import 'package:flutter/material.dart'; // 🎨 Widgets UI Flutter
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 🌍 Localisation
 import 'package:sapient/services/firestore/flashcards_service.dart'; // 🔥 Service Firestore pour les flashcards
 
-const bool kEnableAddFlashcardLogs = true; // 🟢 Active ou désactive les logs pour cette page
+const bool kEnableAddFlashcardLogs = false; // 🟢 Active ou désactive les logs pour cette page
 
 /// 🔍 Fonction utilitaire pour afficher des logs si activés
 void logAddFlashcard(String msg) {
@@ -184,11 +184,7 @@ class _AddFlashcardPageState extends State<AddFlashcardPage> {
     int correctedLevel = widget.level;
 
     // ✅ Étape 5 : sécurité anti-doublon : si le dernier ID des parents est égal au subjectId → on le retire
-    if (correctedParentPathIds.isNotEmpty &&
-        correctedParentPathIds.last == widget.subjectId) {
-      correctedParentPathIds.removeLast(); // ❌ Évite une répétition d’ID dans le chemin Firestore
-      correctedLevel -= 1; // 🧮 Réduit aussi le niveau car on a supprimé un maillon du chemin
-    }
+
 
     // ✅ Étape 6 : on appelle le service Firestore pour ajouter la flashcard dans le bon dossier
     await _service.addFlashcard(

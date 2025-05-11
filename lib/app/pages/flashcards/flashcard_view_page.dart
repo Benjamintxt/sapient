@@ -162,7 +162,7 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
 
                       // 🧠 Cas 2 : texte disponible à afficher
                       if (text.isNotEmpty) {
-                        logFlashcardView("✍️ Texte détecté pour le $side : \"$text\"");
+                        logFlashcardView("✍️ [FlashcardViewPage] Texte détecté pour le $side : \"$text\"");
                         return Text(
                           text,
                           style: const TextStyle(
@@ -174,7 +174,7 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                       }
 
                       // ❌ Cas 3 : ni texte ni image
-                      logFlashcardView("❗ Rien à afficher pour le $side");
+                      logFlashcardView("❗ [FlashcardViewPage] Rien à afficher pour le $side");
                       return const Text(
                         '[Flashcard vide]',
                         style: TextStyle(
@@ -194,7 +194,18 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                 child: FloatingActionButton(
                   heroTag: 'edit',
                   onPressed: () {
-                    logFlashcardView("✏️ Édition de la carte");
+                    logFlashcardView("✏️ [FlashcardViewPage] Édition de la carte");
+
+                    final bool hasParent = widget.parentPathIds != null && widget.parentPathIds!.isNotEmpty;
+                    final String effectiveSubjectId = hasParent ? widget.parentPathIds!.last : widget.subjectId;
+                    final List<String> effectiveParentPathIds =
+                    hasParent ? widget.parentPathIds!.sublist(0, widget.parentPathIds!.length - 1) : [];
+
+                    logFlashcardView(
+                      "📂 [FlashcardViewPage] Chemin vers l'édition : users/${widget.userId}/subjects/$effectiveSubjectId/"
+                          "subsubject${widget.level}/flashcards/${widget.flashcardId}",
+                    );
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -202,16 +213,22 @@ class _FlashcardViewPageState extends State<FlashcardViewPage> {
                           initialFront: widget.front,
                           initialBack: widget.back,
                           flashcardId: widget.flashcardId,
-                          subjectId: widget.subjectId,
+                          subjectId: effectiveSubjectId,
                           userId: widget.userId,
                           level: widget.level,
-                          parentPathIds: widget.parentPathIds,
+                          parentPathIds: effectiveParentPathIds, // ✅ corrigé
                           imageFrontUrl: widget.imageFrontUrl,
                           imageBackUrl: widget.imageBackUrl,
                         ),
                       ),
                     );
+
+                    logFlashcardView(
+                      "✏️ [FlashcardViewPage] Navigation vers EditFlashcardPage avec : subjectId=$effectiveSubjectId, "
+                          "parentPathIds=$effectiveParentPathIds, level=${widget.level}, flashcardId=${widget.flashcardId}",
+                    );
                   },
+
                   backgroundColor: Colors.black,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: const Icon(Icons.edit, size: 32, color: Colors.white),

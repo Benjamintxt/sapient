@@ -4,7 +4,7 @@ import 'dart:io'; // 📂 Pour gérer les fichiers locaux (ex: images prises par
 import 'package:firebase_storage/firebase_storage.dart'; // ☁️ Pour accéder à Firebase Storage
 import 'package:uuid/uuid.dart'; // 🔑 Pour générer des identifiants uniques
 
-const bool kEnableStorageLogs = true; // ✅ Active/désactive les logs liés au stockage
+const bool kEnableStorageLogs = false; // ✅ Active/désactive les logs liés au stockage
 
 /// 📢 Logger dédié à Firebase Storage (upload, suppression d'image)
 void logStorage(String message) {

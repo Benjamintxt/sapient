@@ -229,6 +229,13 @@ class FirestoreSubjectsService {
     required List<String> parentPathIds,
   }) async {
     logSubjects("🔎 [getSubjectNamesFromPath] user=$userId | path=$parentPathIds");
+
+    // Cas spécial : pas de parents → on retourne directement une liste vide (ou un nom générique)
+    if (parentPathIds.isEmpty) {
+      logSubjects("⚠️ [getSubjectNamesFromPath] parentPathIds vide, retourne []");
+      return [];
+    }
+
     final List<String> names = [];
 
     // 📘 Accès au niveau 0
@@ -263,6 +270,7 @@ class FirestoreSubjectsService {
     logSubjects("📋 Noms finaux = $names");
     return names;
   }
+
 
   /// 🔹 Récupère les sujets racine (niveau 0) en une seule fois (QuerySnapshot)
   Future<QuerySnapshot> getRootSubjectsOnce() async {
